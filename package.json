@@ -1,6 +1,6 @@
 {
   "name": "menu-y-movimiento",
-  "version": "1.1.0",
+  "version": "2.0.0",
   "description": "Menú semanal para diabetes y rutina de ejercicios en casa",
   "main": "index.js",
   "scripts": {

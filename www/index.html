@@ -106,6 +106,54 @@ label.chip.no:has(input:checked){background:var(--warn-soft);border-color:var(--
 .ex .how{grid-column:1/-1;font-size:.85rem;color:var(--muted)}
 .dose{font-family:var(--f-num);font-size:.85rem;white-space:nowrap}
 footer{font-size:.85rem;color:var(--muted);max-width:75ch}
+/* Registros */
+.entry{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;align-items:end;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.entry .btn{height:42px}
+.chartbox{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:grid;gap:8px;min-width:0}
+.chartbox svg{width:100%;height:auto;display:block;overflow:visible}
+.chart-axis{font-family:var(--f-num);font-size:11px;fill:var(--muted)}
+.chart-grid{stroke:var(--line);stroke-width:1}
+.chart-band{fill:var(--accent-soft)}
+.chart-line{fill:none;stroke:var(--accent);stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
+.chart-goal{stroke:var(--carb);stroke-width:2;stroke-dasharray:6 5}
+.chart-pt{fill:var(--accent);stroke:var(--surface);stroke-width:2}
+.chart-pt.low{fill:var(--warn)}
+.chart-pt.high{fill:var(--carb)}
+.chart-hit{fill:transparent;cursor:pointer}
+.chart-tip{font-family:var(--f-num);font-size:12px;fill:var(--ink)}
+.chart-empty{color:var(--muted);font-size:.95rem;padding:24px 0;text-align:center}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:.82rem;color:var(--muted)}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-1px;margin-right:5px}
+.tablewrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:12px}
+table.log{width:100%;border-collapse:collapse;font-size:.92rem}
+table.log th{text-align:left;font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:700;padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+table.log td{padding:8px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+table.log tr:last-child td{border-bottom:none}
+table.log td.v{font-family:var(--f-num);font-variant-numeric:tabular-nums;white-space:nowrap}
+.pill{display:inline-block;border-radius:999px;padding:1px 9px;font-size:.78rem;font-weight:700;white-space:nowrap}
+.pill.ok{background:var(--accent-soft);color:var(--accent)}
+.pill.low{background:var(--warn-soft);color:var(--warn)}
+.pill.high{background:var(--carb-soft);color:var(--carb)}
+.del{background:none;border:none;color:var(--muted);font:inherit;font-size:.82rem;cursor:pointer;padding:0;white-space:nowrap}
+.del:hover,.del.armed{color:var(--warn);font-weight:700}
+.empty-log{padding:20px 16px;color:var(--muted)}
+.hypo{background:var(--warn-soft);border:1px solid var(--warn);border-radius:12px;padding:12px 16px}
+.print-only{display:none}
+.print-note{font-size:.85rem;color:var(--muted)}
+/* Impresión */
+@media print{
+  :root:not(#_p){--bg:#FFFFFF;--surface:#FFFFFF;--ink:#000000;--muted:#444444;--line:#BBBBBB;--accent:#0E7A6C;--accent-soft:#E3F2EF;--carb:#8A5A06;--carb-soft:#F6EBD6;--warn:#B3261E;--warn-soft:#FBE4E2;color-scheme:light}
+  body{font-size:11pt}
+  .wrap{max-width:none;padding:0;gap:12px}
+  nav,.btn,.swap,.del,.entry,#form,.banner,.lede,.print-note,.tips{display:none!important}
+  .print-only{display:block}
+  .stats{grid-template-columns:repeat(4,1fr)}
+  .day,.session,.box,.chartbox,.stat,tr{break-inside:avoid}
+  .days,.week{grid-template-columns:repeat(2,1fr)}
+  .shop{grid-template-columns:repeat(3,1fr)}
+  .tablewrap{overflow:visible;border:none}
+  @page{margin:14mm}
+}
 @media (prefers-reduced-motion:no-preference){.day,.session{transition:border-color .2s}.day:hover,.session:hover{border-color:var(--accent)}}
 </style>
 </head>
@@ -117,6 +165,7 @@ footer{font-size:.85rem;color:var(--muted);max-width:75ch}
     <p class="lede">Tu menú semanal pensado para la diabetes, con los carbohidratos contados en cada comida, y una rutina de ejercicios para hacer en casa. Rellena tu perfil y se ajusta a ti.</p>
   </header>
 
+  <p class="print-only" id="printHead"></p>
   <div class="banner" id="sampleBanner" hidden><strong>Perfil de ejemplo.</strong> Ve a la pestaña «Mi perfil», pon tus datos y pulsa «Guardar y crear mi plan».</div>
 
   <div class="stats" id="stats"></div>
@@ -125,13 +174,15 @@ footer{font-size:.85rem;color:var(--muted);max-width:75ch}
     <button role="tab" id="tab-menu" aria-selected="true" data-tab="menu">Menú semanal</button>
     <button role="tab" id="tab-compra" aria-selected="false" data-tab="compra">Lista de la compra</button>
     <button role="tab" id="tab-ejercicio" aria-selected="false" data-tab="ejercicio">Ejercicios</button>
+    <button role="tab" id="tab-glucosa" aria-selected="false" data-tab="glucosa">Glucosa</button>
+    <button role="tab" id="tab-peso" aria-selected="false" data-tab="peso">Peso</button>
     <button role="tab" id="tab-perfil" aria-selected="false" data-tab="perfil">Mi perfil</button>
   </nav>
 
   <section class="panel" id="p-menu">
     <div class="row">
       <h2>Tu semana</h2>
-      <button class="btn" id="regen" type="button">Crear otra semana</button>
+      <div class="row"><button class="btn ghost print-btn" type="button" data-title="Menú semanal">Imprimir</button><button class="btn" id="regen" type="button">Crear otra semana</button></div>
     </div>
     <p class="note" id="menuNote"></p>
     <div class="days" id="days"></div>
@@ -141,7 +192,7 @@ footer{font-size:.85rem;color:var(--muted);max-width:75ch}
   <section class="panel" id="p-compra" hidden>
     <div class="row">
       <h2>Lista de la compra</h2>
-      <button class="btn ghost" id="copyList" type="button">Copiar lista</button>
+      <div class="row"><button class="btn ghost print-btn" type="button" data-title="Lista de la compra">Imprimir</button><button class="btn ghost" id="copyList" type="button">Copiar lista</button></div>
     </div>
     <p class="note">Sale del menú de esta semana. El número indica en cuántas comidas aparece cada producto. Marca lo que ya tienes.</p>
     <div class="shop" id="shop"></div>
@@ -151,7 +202,7 @@ footer{font-size:.85rem;color:var(--muted);max-width:75ch}
   <section class="panel" id="p-ejercicio" hidden>
     <div class="row">
       <h2>Rutina en casa</h2>
-      <button class="btn" id="regenEx" type="button">Cambiar ejercicios</button>
+      <div class="row"><button class="btn ghost print-btn" type="button" data-title="Rutina de ejercicios">Imprimir</button><button class="btn" id="regenEx" type="button">Cambiar ejercicios</button></div>
     </div>
     <div class="alert" id="safety"></div>
     <div class="week" id="week"></div>
@@ -163,6 +214,53 @@ footer{font-size:.85rem;color:var(--muted);max-width:75ch}
         <li>Intenta no pasar más de 30 minutos seguidos sentado: levántate, camina un par de minutos.</li>
       </ul>
     </div>
+  </section>
+
+  <section class="panel" id="p-glucosa" hidden>
+    <div class="row">
+      <h2>Mis glucemias</h2>
+      <button class="btn ghost print-btn" type="button" data-title="Informe de glucosa">Imprimir informe</button>
+    </div>
+    <form id="gForm" class="entry">
+      <label class="field">Fecha<input id="gFecha" type="date" required></label>
+      <label class="field">Hora<input id="gHora" type="time" required></label>
+      <label class="field">Momento<select id="gMomento"></select></label>
+      <label class="field">Glucosa (mg/dL)<input id="gValor" type="number" min="20" max="600" inputmode="numeric" required placeholder="ej. 112"></label>
+      <label class="field">Nota<input id="gNota" type="text" maxlength="80" placeholder="opcional"></label>
+      <button class="btn" type="submit">Añadir</button>
+    </form>
+    <div class="hypo" id="gHypo" hidden></div>
+    <div class="stats" id="gStats"></div>
+    <div class="chartbox">
+      <h3>Últimos 14 días</h3>
+      <div id="gChart"></div>
+      <div class="legend"><span><i style="background:var(--accent-soft)"></i>Rango 70–180 mg/dL</span><span><i style="background:var(--accent)"></i>En objetivo</span><span><i style="background:var(--carb)"></i>Alta</span><span><i style="background:var(--warn)"></i>Baja (&lt;70)</span></div>
+    </div>
+    <div class="tablewrap" id="gTable"></div>
+    <p class="note">Objetivos habituales en diabetes: en ayunas o antes de comer, 80–130 mg/dL; 2 horas después de comer, menos de 180 mg/dL. Tu médico puede indicarte otros.</p>
+    <p class="print-note" id="gPrintNote"></p>
+  </section>
+
+  <section class="panel" id="p-peso" hidden>
+    <div class="row">
+      <h2>Control de peso</h2>
+      <button class="btn ghost print-btn" type="button" data-title="Control de peso">Imprimir</button>
+    </div>
+    <form id="wForm" class="entry">
+      <label class="field">Fecha<input id="wFecha" type="date" required></label>
+      <label class="field">Peso (kg)<input id="wPeso" type="number" min="30" max="300" step="0.1" inputmode="decimal" required placeholder="ej. 85,4"></label>
+      <label class="field">Cintura (cm)<input id="wCintura" type="number" min="40" max="200" step="0.5" inputmode="decimal" placeholder="opcional"></label>
+      <label class="field">Peso objetivo (kg)<input id="wObjetivo" type="number" min="30" max="300" step="0.5" inputmode="decimal" placeholder="opcional"></label>
+      <button class="btn" type="submit">Añadir</button>
+    </form>
+    <div class="stats" id="wStats"></div>
+    <div class="chartbox">
+      <h3>Evolución</h3>
+      <div id="wChart"></div>
+      <div class="legend"><span><i style="background:var(--accent)"></i>Peso</span><span><i style="background:var(--carb)"></i>Objetivo</span></div>
+    </div>
+    <div class="tablewrap" id="wTable"></div>
+    <p class="note">Pésate siempre en las mismas condiciones: por la mañana, en ayunas y después de ir al baño. Con una vez por semana basta. Tu última pesada actualiza el peso de tu perfil y las calorías del menú.</p>
   </section>
 
   <section class="panel" id="p-perfil" hidden>
@@ -454,7 +552,7 @@ let perfil = store.get('mym-perfil') || SAMPLE;
 let semana = store.get('mym-semana');
 let exSeed = store.get('mym-exseed') || Math.floor(Math.random()*1000);
 function validWeek(w){ return Array.isArray(w) && w.length===7 && w.every(d => d.length===SLOTS[perfil.comidas].length && d.every(byId)); }
-if (perfil.ejemplo) perfil = SAMPLE;
+if (perfil.ejemplo) perfil = {...SAMPLE, pesoObjetivo: perfil.pesoObjetivo || null};
 if (store.get('mym-v') !== 2) { semana = null; store.set('mym-v', 2); }
 if (!validWeek(semana)) { semana = makeWeek(perfil); store.set('mym-semana', semana); }
 
@@ -564,13 +662,183 @@ function renderExercise(){
   $('#safety').innerHTML = `<h3>Antes de entrenar${hypo ? ': cuidado con las bajadas de azúcar' : ''}</h3><ul>${items.map(x => `<li>${x}</li>`).join('')}</ul>`;
 }
 
-function renderAll(){ renderStats(); renderMenu(); renderShop(); renderExercise(); }
+/* ---------- Registros: glucosa y peso ---------- */
+const MOMENTOS = [['ayunas','En ayunas',80,130],['antes','Antes de comer o cenar',80,130],['despues','2 h después de comer',70,180],['dormir','Antes de dormir',90,150],['ejercicio','Antes o después de ejercicio',70,180],['otro','Otro momento',70,180]];
+const momento = k => MOMENTOS.find(m => m[0]===k) || MOMENTOS[5];
+let gLog = store.get('mym-glucosa') || [];
+let wLog = store.get('mym-peso') || [];
+const pad = n => String(n).padStart(2,'0');
+const hoyISO = () => { const d = new Date(); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; };
+const ahoraHM = () => { const d = new Date(); return `${pad(d.getHours())}:${pad(d.getMinutes())}`; };
+const fechaCorta = iso => { const [y,m,d] = iso.split('-'); return `${d}/${m}/${y.slice(2)}`; };
+const ts = (f, h) => new Date(`${f}T${h||'08:00'}`).getTime();
+const esc = t => String(t).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function gEstado(e){
+  const [,,lo,hi] = momento(e.m);
+  if (e.v < 54) return ['low','Muy baja'];
+  if (e.v < 70) return ['low','Baja'];
+  if (e.v > 250) return ['high','Muy alta'];
+  if (e.v > hi) return ['high','Alta'];
+  if (e.v < lo) return ['high','Algo baja'];
+  return ['ok','En objetivo'];
+}
+$('#gMomento').innerHTML = MOMENTOS.map(m => `<option value="${m[0]}">${m[1]}</option>`).join('');
+function resetGForm(){ $('#gFecha').value = hoyISO(); $('#gHora').value = ahoraHM(); $('#gValor').value = ''; $('#gNota').value = ''; }
+function resetWForm(){ $('#wFecha').value = hoyISO(); $('#wPeso').value = ''; $('#wCintura').value = ''; $('#wObjetivo').value = perfil.pesoObjetivo || ''; }
+
+/* Gráfica de línea simple: puntos [{t, v, cls, tip}] */
+function lineChart(el, pts, opt){
+  if (pts.length < 1){ el.innerHTML = `<p class="chart-empty">${opt.empty}</p>`; return; }
+  const W = 640, H = 230, L = 44, Rr = 14, T = 14, B = 28;
+  const t0 = opt.tMin ?? Math.min(...pts.map(p => p.t)), t1 = Math.max(opt.tMax ?? 0, ...pts.map(p => p.t));
+  const span = Math.max(t1 - t0, 864e5);
+  let lo = opt.yMin, hi = opt.yMax;
+  const vals = pts.map(p => p.v).concat(opt.extra || []);
+  if (lo == null) lo = Math.floor((Math.min(...vals) - 2) / 2) * 2;
+  if (hi == null) hi = Math.ceil((Math.max(...vals) + 2) / 2) * 2;
+  hi = Math.max(hi, Math.max(...vals)); lo = Math.min(lo, Math.min(...vals));
+  const x = t => L + (t - t0) / span * (W - L - Rr);
+  const y = v => T + (1 - (v - lo) / (hi - lo)) * (H - T - B);
+  const step = opt.yStep || niceStep(hi - lo);
+  let g = '';
+  if (opt.band) g += `<rect class="chart-band" x="${L}" width="${W-L-Rr}" y="${y(opt.band[1])}" height="${y(opt.band[0]) - y(opt.band[1])}"/>`;
+  for (let v = Math.ceil(lo/step)*step; v <= hi + 1e-9; v += step){
+    g += `<line class="chart-grid" x1="${L}" x2="${W-Rr}" y1="${y(v)}" y2="${y(v)}"/><text class="chart-axis" x="${L-6}" y="${y(v)+4}" text-anchor="end">${fmt(+v.toFixed(1))}</text>`;
+  }
+  const days = Math.round(span / 864e5), every = days <= 7 ? 1 : days <= 16 ? 2 : Math.ceil(days / 7);
+  for (let k = 0; k <= days; k += every){
+    const t = t0 + k*864e5, d = new Date(t);
+    g += `<text class="chart-axis" x="${x(t)}" y="${H-8}" text-anchor="middle">${d.getDate()}/${d.getMonth()+1}</text>`;
+  }
+  if (opt.goal != null && opt.goal >= lo && opt.goal <= hi) g += `<line class="chart-goal" x1="${L}" x2="${W-Rr}" y1="${y(opt.goal)}" y2="${y(opt.goal)}"/>`;
+  const sorted = [...pts].sort((a,b) => a.t - b.t);
+  if (sorted.length > 1) g += `<polyline class="chart-line" points="${sorted.map(p => `${x(p.t).toFixed(1)},${y(p.v).toFixed(1)}`).join(' ')}"/>`;
+  sorted.forEach(p => {
+    g += `<circle class="chart-pt ${p.cls||''}" cx="${x(p.t)}" cy="${y(p.v)}" r="5"/><circle class="chart-hit" cx="${x(p.t)}" cy="${y(p.v)}" r="12" data-tip="${esc(p.tip)}"><title>${esc(p.tip)}</title></circle>`;
+  });
+  const last = sorted[sorted.length-1];
+  g += `<text class="chart-tip" x="${Math.min(x(last.t), W-Rr)}" y="${Math.max(y(last.v)-12, 12)}" text-anchor="end">${fmt(last.v)}</text>`;
+  el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(opt.label)}">${g}<text class="chart-tip" id="${el.id}-tip" x="0" y="0" visibility="hidden"></text></svg>`;
+  const tip = el.querySelector(`#${el.id}-tip`);
+  el.querySelectorAll('.chart-hit').forEach(c => {
+    c.addEventListener('mouseenter', () => { const cx = +c.getAttribute('cx'), cy = +c.getAttribute('cy'); tip.textContent = c.dataset.tip; tip.setAttribute('x', Math.min(Math.max(cx, 90), W-90)); tip.setAttribute('y', Math.max(cy - 14, 12)); tip.setAttribute('text-anchor','middle'); tip.setAttribute('visibility','visible'); });
+    c.addEventListener('mouseleave', () => tip.setAttribute('visibility','hidden'));
+  });
+}
+function niceStep(r){ const raw = r / 5, p = Math.pow(10, Math.floor(Math.log10(raw))), n = raw / p; return (n < 1.5 ? 1 : n < 3 ? 2 : n < 7 ? 5 : 10) * p; }
+
+function delBtn(kind, i){ return `<button class="del" type="button" data-kind="${kind}" data-i="${i}">Borrar</button>`; }
+
+function renderGlucosa(){
+  const sorted = gLog.map((e,i) => ({...e, i, t: ts(e.f, e.h)})).sort((a,b) => b.t - a.t);
+  const week = sorted.filter(e => e.t >= Date.now() - 7*864e5);
+  const bajas = week.filter(e => e.v < 70).length;
+  const media = week.length ? Math.round(week.reduce((a,e) => a + e.v, 0) / week.length) : null;
+  const enObj = week.length ? Math.round(week.filter(e => gEstado(e)[0]==='ok').length / week.length * 100) : null;
+  const last = sorted[0];
+  $('#gStats').innerHTML = `
+    <div class="stat"><span class="lbl">Última</span><span class="val">${last ? last.v : '—'}</span><span class="sub">${last ? `${gEstado(last)[1]} · ${fechaCorta(last.f)} ${last.h}` : 'sin mediciones'}</span></div>
+    <div class="stat"><span class="lbl">Media 7 días</span><span class="val">${media ?? '—'}</span><span class="sub">mg/dL · ${week.length} medidas</span></div>
+    <div class="stat"><span class="lbl">En objetivo</span><span class="val">${enObj == null ? '—' : enObj + ' %'}</span><span class="sub">últimos 7 días</span></div>
+    <div class="stat"><span class="lbl">Bajadas (&lt;70)</span><span class="val">${week.length ? bajas : '—'}</span><span class="sub">últimos 7 días</span></div>`;
+  const h = $('#gHypo');
+  if (last && last.v < 70 && last.t > Date.now() - 3*36e5){
+    h.hidden = false;
+    h.innerHTML = `<strong>Tu última medida está baja (${last.v} mg/dL).</strong> Toma 15 g de azúcar rápido (un vaso pequeño de zumo o 3–4 pastillas de glucosa), espera 15 minutos y vuelve a medir. Repite si sigue por debajo de 70. ${last.v < 54 ? 'Por debajo de 54 es una hipoglucemia importante: si no mejora o estás confuso, pide ayuda.' : ''}`;
+  } else h.hidden = true;
+  const from = Date.now() - 14*864e5;
+  const pts = sorted.filter(e => e.t >= from).map(e => ({t:e.t, v:e.v, cls: gEstado(e)[0]==='ok' ? '' : gEstado(e)[0], tip:`${e.v} mg/dL · ${momento(e.m)[1].toLowerCase()} · ${fechaCorta(e.f)} ${e.h}`}));
+  lineChart($('#gChart'), pts, {tMin: from, tMax: Date.now(), yMin: 40, yMax: 300, yStep: 40, band:[70,180], extra:[], label:'Glucosa de los últimos 14 días', empty:'Aún no hay mediciones. Añade la primera con el formulario de arriba y aquí verás cómo evoluciona tu glucosa.'});
+  $('#gTable').innerHTML = sorted.length ? `<table class="log"><thead><tr><th>Fecha</th><th>Hora</th><th>Momento</th><th>mg/dL</th><th>Estado</th><th>Nota</th><th></th></tr></thead><tbody>${
+    sorted.map(e => { const [c,l] = gEstado(e); return `<tr><td>${fechaCorta(e.f)}</td><td class="v">${e.h}</td><td>${momento(e.m)[1]}</td><td class="v">${e.v}</td><td><span class="pill ${c}">${l}</span></td><td>${esc(e.n||'')}</td><td>${delBtn('g', e.i)}</td></tr>`; }).join('')
+  }</tbody></table>` : `<p class="empty-log">Tus mediciones aparecerán aquí, de la más reciente a la más antigua.</p>`;
+}
+
+function renderPeso(){
+  const sorted = wLog.map((e,i) => ({...e, i, t: ts(e.f)})).sort((a,b) => b.t - a.t);
+  const last = sorted[0], first = sorted[sorted.length-1];
+  const objetivo = perfil.pesoObjetivo ? +perfil.pesoObjetivo : null;
+  const near = days => { const lim = Date.now() - days*864e5; return sorted.find(e => e.t <= lim); };
+  const diff = (a, b) => { if (!a || !b) return '—'; const d = Math.round((a.p - b.p)*10)/10; return (d > 0 ? '+' : '') + fmt(d) + ' kg'; };
+  const imc = last ? last.p / Math.pow(perfil.altura/100, 2) : null;
+  $('#wStats').innerHTML = `
+    <div class="stat"><span class="lbl">Peso actual</span><span class="val">${last ? fmt(last.p) + ' kg' : '—'}</span><span class="sub">${last ? 'el ' + fechaCorta(last.f) : 'sin pesadas'}</span></div>
+    <div class="stat"><span class="lbl">Desde el inicio</span><span class="val">${sorted.length > 1 ? diff(last, first) : '—'}</span><span class="sub">${first && sorted.length > 1 ? 'desde ' + fechaCorta(first.f) : 'necesitas 2 pesadas'}</span></div>
+    <div class="stat"><span class="lbl">Últimas 4 semanas</span><span class="val">${sorted.length > 1 ? diff(last, near(28) || first) : '—'}</span><span class="sub">bajar 0,5–1 kg por semana es un buen ritmo</span></div>
+    <div class="stat"><span class="lbl">${objetivo ? 'Te faltan' : 'IMC'}</span><span class="val">${objetivo && last ? fmt(Math.max(0, Math.round((last.p - objetivo)*10)/10)) + ' kg' : imc ? fmt(imc.toFixed(1)) : '—'}</span><span class="sub">${objetivo ? 'para llegar a ' + fmt(objetivo) + ' kg' : 'pon un peso objetivo arriba'}</span></div>`;
+  const pts = sorted.map(e => ({t:e.t, v:e.p, tip:`${fmt(e.p)} kg · ${fechaCorta(e.f)}`}));
+  lineChart($('#wChart'), pts, {goal: objetivo, extra: objetivo ? [objetivo] : [], label:'Evolución del peso', empty:'Aún no hay pesadas. Añade la de hoy y aquí verás tu evolución semana a semana.'});
+  $('#wTable').innerHTML = sorted.length ? `<table class="log"><thead><tr><th>Fecha</th><th>Peso</th><th>Cambio</th><th>Cintura</th><th></th></tr></thead><tbody>${
+    sorted.map((e,k) => { const prev = sorted[k+1]; return `<tr><td>${fechaCorta(e.f)}</td><td class="v">${fmt(e.p)} kg</td><td class="v">${prev ? diff(e, prev) : ''}</td><td class="v">${e.c ? fmt(e.c) + ' cm' : ''}</td><td>${delBtn('w', e.i)}</td></tr>`; }).join('')
+  }</tbody></table>` : `<p class="empty-log">Tus pesadas aparecerán aquí.</p>`;
+}
+
+function syncPesoPerfil(){
+  const last = wLog.map(e => ({...e, t: ts(e.f)})).sort((a,b) => b.t - a.t)[0];
+  if (last && Math.abs(last.p - perfil.peso) > 0.05){
+    perfil.peso = last.p; delete perfil.ejemplo; store.set('mym-perfil', perfil); fillForm(perfil);
+    renderStats(); renderMenu(); renderShop();
+  }
+}
+
+$('#gForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const v = Math.round(parseFloat($('#gValor').value));
+  if (!v) return;
+  gLog.push({f: $('#gFecha').value, h: $('#gHora').value, m: $('#gMomento').value, v, n: $('#gNota').value.trim()});
+  store.set('mym-glucosa', gLog); renderGlucosa(); resetGForm(); $('#gValor').focus();
+});
+$('#wForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const p = parseFloat(String($('#wPeso').value).replace(',', '.'));
+  const obj = parseFloat(String($('#wObjetivo').value).replace(',', '.'));
+  perfil.pesoObjetivo = obj || null; store.set('mym-perfil', perfil);
+  if (p){
+    const c = parseFloat(String($('#wCintura').value).replace(',', '.')) || null;
+    const f = $('#wFecha').value, idx = wLog.findIndex(x => x.f === f);
+    if (idx >= 0) wLog[idx] = {f, p, c}; else wLog.push({f, p, c});
+    store.set('mym-peso', wLog); syncPesoPerfil();
+  }
+  renderPeso(); resetWForm();
+});
+document.addEventListener('click', e => {
+  const b = e.target.closest('.del'); if (!b) return;
+  if (!b.classList.contains('armed')){ b.classList.add('armed'); b.textContent = '¿Borrar? Sí'; setTimeout(() => { b.classList.remove('armed'); b.textContent = 'Borrar'; }, 3000); return; }
+  const i = +b.dataset.i;
+  if (b.dataset.kind === 'g'){ gLog.splice(i, 1); store.set('mym-glucosa', gLog); renderGlucosa(); }
+  else { wLog.splice(i, 1); store.set('mym-peso', wLog); syncPesoPerfil(); renderPeso(); }
+});
+
+/* ---------- Imprimir ---------- */
+const enApp = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) || ['localhost','127.0.0.1'].includes(location.hostname);
+const Impresora = window.Capacitor && window.Capacitor.registerPlugin ? window.Capacitor.registerPlugin('Imprimir') : null;
+document.querySelectorAll('.print-btn').forEach(b => {
+  if (!enApp){ b.title = 'Para imprimir, usa la app de Windows o Android'; }
+  b.addEventListener('click', () => {
+    const titulo = b.dataset.title;
+    const d = new Date();
+    $('#printHead').innerHTML = `<strong>${titulo}</strong> · Menú y Movimiento · ${d.toLocaleDateString('es-ES', {day:'numeric', month:'long', year:'numeric'})}`;
+    if (!enApp){ showPrintMsg(b); return; }
+    try {
+      if (Impresora && window.Capacitor.isNativePlatform()) Impresora.print({title: titulo + ' - Menú y Movimiento'});
+      else window.print();
+    } catch(err){ window.print(); }
+  });
+});
+function showPrintMsg(b){
+  let m = b.parentElement.querySelector('.print-msg');
+  if (!m){ m = document.createElement('span'); m.className = 'note print-msg'; b.after(m); }
+  m.textContent = 'Para imprimir, abre la app de Windows o Android.';
+  setTimeout(() => m.remove(), 4000);
+}
+
+function renderAll(){ renderStats(); renderMenu(); renderShop(); renderExercise(); renderGlucosa(); renderPeso(); }
 
 /* ---------- Eventos ---------- */
 document.querySelectorAll('nav button').forEach(b => b.addEventListener('click', () => showTab(b.dataset.tab)));
 function showTab(t){
   document.querySelectorAll('nav button').forEach(b => b.setAttribute('aria-selected', b.dataset.tab===t));
-  ['menu','compra','ejercicio','perfil'].forEach(x => $('#p-'+x).hidden = x!==t);
+  ['menu','compra','ejercicio','glucosa','peso','perfil'].forEach(x => $('#p-'+x).hidden = x!==t);
   store.set('mym-tab', t);
 }
 $('#regen').addEventListener('click', () => { semana = makeWeek(perfil); store.set('mym-semana', semana); store.set('mym-shopcheck', []); renderMenu(); renderShop(); });
@@ -599,6 +867,7 @@ $('#form').addEventListener('submit', e => {
   const p = readForm();
   if (p.meds.includes('ninguna') && p.meds.length > 1) p.meds = p.meds.filter(m => m!=='ninguna');
   const changedMeals = p.comidas !== perfil.comidas;
+  p.pesoObjetivo = perfil.pesoObjetivo || null;
   perfil = p; store.set('mym-perfil', perfil);
   semana = makeWeek(perfil); store.set('mym-semana', semana); store.set('mym-shopcheck', []);
   renderAll();
@@ -607,6 +876,7 @@ $('#form').addEventListener('submit', e => {
 });
 
 fillForm(perfil);
+resetGForm(); resetWForm();
 renderAll();
 const lastTab = store.get('mym-tab'); if (lastTab && $('#p-'+lastTab)) showTab(lastTab);
 </script>
