@@ -1,6 +1,6 @@
 {
   "applicationId": "es.menuymovimiento.app",
-  "version": "3.3.0",
+  "version": "4.0.0",
   "defaultMode": "window",
   "port": 51783,
   "documentRoot": "/www/",
