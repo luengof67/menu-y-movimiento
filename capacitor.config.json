@@ -2,5 +2,13 @@
   "appId": "es.menuymovimiento.app",
   "appName": "Menú y Movimiento",
   "webDir": "www",
-  "android": { "backgroundColor": "#EFF4F3" }
+  "android": {
+    "backgroundColor": "#EFF4F3"
+  },
+  "plugins": {
+    "LocalNotifications": {
+      "smallIcon": "ic_stat_mym",
+      "iconColor": "#0E7A6C"
+    }
+  }
 }

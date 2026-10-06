@@ -187,6 +187,26 @@ table.log td.v{font-family:var(--f-num);font-variant-numeric:tabular-nums;white-
   .entry .btn{grid-column:1/-1;height:48px}
 }
 @media print{.bottomnav,.daypick{display:none!important}.days .day{display:grid!important}}
+/* Entradas rápidas, platos, analíticas, informe, avisos */
+.quick input[type=number],.quick select{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;width:100%;padding:8px 10px}
+.quick input[type=number]{font-family:var(--f-num);font-size:1.8rem}
+.quick input[type=number]:focus{border-color:var(--accent)}
+.platos{display:grid;gap:6px}
+.plato{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:center;padding:8px 0;border-top:1px solid var(--line)}
+.plato:first-child{border-top:none}
+.plato .v{font-family:var(--f-num);font-variant-numeric:tabular-nums;white-space:nowrap}
+.aviso{display:grid;grid-template-columns:auto 1fr auto;gap:4px 12px;align-items:center;padding:12px 0;border-top:1px solid var(--line)}
+.aviso:first-child{border-top:none}
+.aviso input[type=checkbox]{width:22px;height:22px;accent-color:var(--accent)}
+.aviso input[type=time]{font:inherit;font-family:var(--f-num);color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:6px 8px}
+.aviso .sub{grid-column:2/3;font-size:.85rem;color:var(--muted)}
+.rep{display:grid;gap:14px}
+.rep h3{border-bottom:2px solid var(--accent);padding-bottom:4px}
+.rep-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px}
+.rep-kv{display:grid;gap:2px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.rep-kv span:first-child{font-size:.75rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.rep-kv span:last-child{font-family:var(--f-num);font-size:1.15rem}
+@media print{.rep-kv{border-color:#BBB}}
 /* Objetivo de peso */
 .goalbox{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:grid;gap:10px}
 .goalbar{position:relative;height:14px;border-radius:999px;background:var(--accent-soft);overflow:hidden}
@@ -241,6 +261,9 @@ table.log td.v{font-family:var(--f-num);font-variant-numeric:tabular-nums;white-
     <button role="tab" id="tab-ejercicio" aria-selected="false" data-tab="ejercicio">Ejercicios</button>
     <button role="tab" id="tab-glucosa" aria-selected="false" data-tab="glucosa">Glucosa</button>
     <button role="tab" id="tab-peso" aria-selected="false" data-tab="peso">Peso</button>
+    <button role="tab" id="tab-analiticas" aria-selected="false" data-tab="analiticas">Analíticas</button>
+    <button role="tab" id="tab-informe" aria-selected="false" data-tab="informe">Informe</button>
+    <button role="tab" id="tab-avisos" aria-selected="false" data-tab="avisos" hidden>Recordatorios</button>
     <button role="tab" id="tab-perfil" aria-selected="false" data-tab="perfil">Mi perfil</button>
   </nav>
 
@@ -251,6 +274,7 @@ table.log td.v{font-family:var(--f-num);font-variant-numeric:tabular-nums;white-
         <div class="card-head"><h3>Apuntar glucosa</h3><button class="linkbtn" type="button" data-go="glucosa">Ver historial</button></div>
         <form id="qForm" class="quick">
           <label class="field">Momento<select id="qMomento"></select></label>
+          <label class="field" id="qComidaF" hidden>¿Después de qué comida?<select id="qComida"></select></label>
           <input id="qValor" type="number" min="20" max="600" inputmode="numeric" placeholder="mg/dL" aria-label="Glucosa en mg/dL" required>
           <button class="btn" type="submit">Guardar</button>
         </form>
@@ -277,6 +301,9 @@ table.log td.v{font-family:var(--f-num);font-variant-numeric:tabular-nums;white-
     <div class="more-sheet">
       <button type="button" data-go="compra"><svg class="icon" viewBox="0 0 24 24"><path d="M3 4h2l2.4 11h11.2L21 8H7"/><circle cx="9" cy="19" r="1.5"/><circle cx="17" cy="19" r="1.5"/></svg>Lista de la compra</button>
       <button type="button" data-go="ejercicio"><svg class="icon" viewBox="0 0 24 24"><path d="M6 8v8M18 8v8M3 10v4M21 10v4M6 12h12"/></svg>Ejercicios</button>
+      <button type="button" data-go="analiticas"><svg class="icon" viewBox="0 0 24 24"><path d="M9 3h6M10 3v6l-5 9a2 2 0 0 0 1.8 3h10.4a2 2 0 0 0 1.8-3l-5-9V3"/><path d="M7.5 15h9"/></svg>Analíticas y tensión</button>
+      <button type="button" data-go="informe"><svg class="icon" viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5M9 13h7M9 17h5"/></svg>Informe para el médico</button>
+      <button type="button" data-go="avisos" id="masAvisos" hidden><svg class="icon" viewBox="0 0 24 24"><path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg>Recordatorios</button>
       <button type="button" data-go="perfil"><svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>Mi perfil y sincronización</button>
     </div>
   </section>
@@ -329,6 +356,7 @@ table.log td.v{font-family:var(--f-num);font-variant-numeric:tabular-nums;white-
       <label class="field">Fecha<input id="gFecha" type="date" required></label>
       <label class="field">Hora<input id="gHora" type="time" required></label>
       <label class="field">Momento<select id="gMomento"></select></label>
+      <label class="field" id="gComidaF" hidden>¿Después de qué comida?<select id="gComida"></select></label>
       <label class="field">Glucosa (mg/dL)<input id="gValor" type="number" min="20" max="600" inputmode="numeric" required placeholder="ej. 112"></label>
       <label class="field">Nota<input id="gNota" type="text" maxlength="80" placeholder="opcional"></label>
       <button class="btn" type="submit">Añadir</button>
@@ -339,6 +367,11 @@ table.log td.v{font-family:var(--f-num);font-variant-numeric:tabular-nums;white-
       <h3>Últimos 14 días</h3>
       <div id="gChart"></div>
       <div class="legend"><span><i style="background:var(--accent-soft)"></i>Rango 70–180 mg/dL</span><span><i style="background:var(--accent)"></i>En objetivo</span><span><i style="background:var(--carb)"></i>Alta</span><span><i style="background:var(--warn)"></i>Baja (&lt;70)</span></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><h3>Tus platos y tu glucosa</h3><button class="linkbtn" type="button" data-go="informe">Informe para el médico</button></div>
+      <p class="note">Cuando apuntas una medición «2 h después de comer», la app la une al plato del menú que tocaba. Así ves qué platos te sientan mejor.</p>
+      <div class="platos" id="gPlatos"></div>
     </div>
     <div class="tablewrap" id="gTable"></div>
     <p class="note">Objetivos habituales en diabetes: en ayunas o antes de comer, 80–130 mg/dL; 2 horas después de comer, menos de 180 mg/dL. Tu médico puede indicarte otros.</p>
@@ -352,8 +385,8 @@ table.log td.v{font-family:var(--f-num);font-variant-numeric:tabular-nums;white-
     </div>
     <form id="wForm" class="entry">
       <label class="field">Fecha<input id="wFecha" type="date" required></label>
-      <label class="field">Peso (kg)<input id="wPeso" type="number" min="30" max="300" step="0.1" inputmode="decimal" required placeholder="ej. 85,4"></label>
-      <label class="field">Cintura (cm)<input id="wCintura" type="number" min="40" max="200" step="0.5" inputmode="decimal" placeholder="opcional"></label>
+      <label class="field">Peso (kg)<input id="wPeso" type="text" inputmode="decimal" autocomplete="off" required placeholder="ej. 85,4"></label>
+      <label class="field">Cintura (cm)<input id="wCintura" type="text" inputmode="decimal" autocomplete="off" placeholder="opcional"></label>
       <button class="btn" type="submit">Añadir</button>
     </form>
     <div class="goalbox" id="wGoal"></div>
@@ -367,6 +400,40 @@ table.log td.v{font-family:var(--f-num);font-variant-numeric:tabular-nums;white-
     <p class="note">Pésate siempre en las mismas condiciones: por la mañana, en ayunas y después de ir al baño. Con una vez por semana basta. Tu última pesada actualiza el peso de tu perfil y las calorías del menú.</p>
   </section>
 
+  <section class="panel" id="p-analiticas" hidden>
+    <div class="row"><h2>Analíticas y tensión</h2><button class="btn ghost print-btn" type="button" data-title="Analíticas y tensión">Imprimir</button></div>
+    <p class="note">Apunta los resultados de tus análisis de sangre y tus tomas de tensión. Rellena solo lo que tengas; el resto puede quedar vacío.</p>
+    <form id="aForm" class="entry">
+      <label class="field">Fecha<input id="aFecha" type="date" required></label>
+      <label class="field">HbA1c (%)<input id="aHba1c" type="text" inputmode="decimal" autocomplete="off" placeholder="ej. 6,8"></label>
+      <label class="field">Colesterol total<input id="aCol" type="number" min="50" max="500" inputmode="numeric" placeholder="mg/dL"></label>
+      <label class="field">LDL<input id="aLdl" type="number" min="10" max="400" inputmode="numeric" placeholder="mg/dL"></label>
+      <label class="field">HDL<input id="aHdl" type="number" min="10" max="150" inputmode="numeric" placeholder="mg/dL"></label>
+      <label class="field">Triglicéridos<input id="aTg" type="number" min="20" max="2000" inputmode="numeric" placeholder="mg/dL"></label>
+      <label class="field">Tensión alta<input id="aPas" type="number" min="70" max="250" inputmode="numeric" placeholder="ej. 128"></label>
+      <label class="field">Tensión baja<input id="aPad" type="number" min="40" max="150" inputmode="numeric" placeholder="ej. 78"></label>
+      <button class="btn" type="submit">Añadir</button>
+    </form>
+    <p class="note" id="aMsg"></p>
+    <div class="stats" id="aStats"></div>
+    <div class="tablewrap" id="aTable"></div>
+    <p class="note">Objetivos habituales en diabetes: HbA1c por debajo de 7 %, LDL por debajo de 100 mg/dL (de 70 si tienes riesgo cardiovascular alto), HDL por encima de 40 en hombres y de 50 en mujeres, triglicéridos por debajo de 150 mg/dL y tensión por debajo de 130/80. Tu médico puede fijarte otros.</p>
+  </section>
+
+  <section class="panel" id="p-informe" hidden>
+    <div class="row"><h2>Informe para el médico</h2><div class="row">
+      <label class="field" style="min-width:150px">Periodo<select id="rDias"><option value="30">Últimos 30 días</option><option value="60">Últimos 60 días</option><option value="90">Últimos 90 días</option></select></label>
+      <button class="btn print-btn" type="button" data-title="Informe para el médico">Imprimir o guardar PDF</button></div></div>
+    <div class="rep" id="report"></div>
+  </section>
+
+  <section class="panel" id="p-avisos" hidden>
+    <h2>Recordatorios</h2>
+    <p class="note" id="avNota">El móvil te avisará a la hora que elijas, aunque la app esté cerrada.</p>
+    <div class="card"><div id="avLista"></div></div>
+    <div class="row"><button class="btn" type="button" id="avGuardar">Guardar recordatorios</button><span class="note" id="avMsg"></span></div>
+  </section>
+
   <section class="panel" id="p-perfil" hidden>
     <h2>Mi perfil</h2>
     <form id="form">
@@ -376,7 +443,7 @@ table.log td.v{font-family:var(--f-num);font-variant-numeric:tabular-nums;white-
           <label class="field">Edad<input id="edad" type="number" min="16" max="99" required></label>
           <label class="field">Sexo<select id="sexo"><option value="h">Hombre</option><option value="m">Mujer</option></select></label>
           <label class="field">Altura (cm)<input id="altura" type="number" min="120" max="220" required></label>
-          <label class="field">Peso (kg)<input id="peso" type="number" min="35" max="250" step="0.1" required></label>
+          <label class="field">Peso (kg)<input id="peso" type="text" inputmode="decimal" autocomplete="off" required></label>
           <label class="field">Actividad diaria<select id="actividad">
             <option value="sedentaria">Sedentaria (casi todo sentado)</option>
             <option value="ligera">Ligera (camino algo)</option>
@@ -386,7 +453,7 @@ table.log td.v{font-family:var(--f-num);font-variant-numeric:tabular-nums;white-
             <option value="perder">Perder peso</option>
             <option value="mantener">Mantener peso</option>
             <option value="musculo">Ganar fuerza y músculo</option></select></label>
-          <label class="field">Peso objetivo (kg)<input id="pesoObjetivo" type="number" min="35" max="250" step="0.5" inputmode="decimal" placeholder="opcional"></label>
+          <label class="field">Peso objetivo (kg)<input id="pesoObjetivo" type="text" inputmode="decimal" autocomplete="off" placeholder="opcional"></label>
           <label class="field">Ritmo para bajar<select id="ritmo">
             <option value="0.25">Suave (¼ kg por semana)</option>
             <option value="0.5">Recomendado (½ kg por semana)</option>
@@ -656,7 +723,7 @@ function fillForm(p){
 function readForm(){
   const p = {};
   SIMPLE.forEach(k => p[k] = $('#'+k).value);
-  ['edad','altura','peso'].forEach(k => p[k] = parseFloat(p[k]));
+  ['edad','altura','peso'].forEach(k => p[k] = parseFloat(String(p[k]).replace(',', '.')));
   p.pesoObjetivo = parseFloat(String(p.pesoObjetivo).replace(',', '.')) || null;
   MULTI.forEach(k => p[k] = [...document.querySelectorAll(`input[name="${k}"]:checked`)].map(i => i.value));
   return p;
@@ -774,6 +841,7 @@ function renderDayPick(){
 }
 function renderMenu(){
   renderDayPick();
+  const ps = platoStats();
   $('#days').innerHTML = semana.map((day, di) => {
     let tHC = 0, tK = 0;
     const meals = day.map((id, si) => {
@@ -783,7 +851,7 @@ function renderMenu(){
       return `<div class="meal">
         <span class="slot">${m.label} · objetivo ${Math.round(m.c.hc*m.pct)} g HC</span>
         <span class="name">${r.n}${m.postre ? `<br><span class="meta">+ ${m.postre.n}</span>` : ''}</span><span class="hc" title="hidratos de carbono">${m.hc} g HC</span>
-        <span class="meta">${m.f!==1 ? 'Ración ×'+fmt(m.f)+' · ' : ''}${fmt(rac)} rac. · ~${m.k} kcal</span>
+        <span class="meta">${m.f!==1 ? 'Ración ×'+fmt(m.f)+' · ' : ''}${fmt(rac)} rac. · ~${m.k} kcal${ps[r.id] ? ` · <strong>tu glucosa 2 h: ${ps[r.id].avg}</strong>${ps[r.id].n > 1 ? ' (' + ps[r.id].n + ' medidas)' : ''}` : ''}</span>
         <button class="swap" type="button" data-d="${di}" data-s="${si}">Cambiar plato</button>
       </div>`;
     }).join('');
@@ -877,7 +945,8 @@ const momento = k => MOMENTOS.find(m => m[0]===k) || MOMENTOS[5];
 let gLog = store.get('mym-glucosa') || [];
 let wLog = store.get('mym-peso') || [];
 const newId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
-[gLog, wLog].forEach(list => list.forEach(e => { if (!e.id) e.id = newId(); if (!e.u) e.u = 1; }));
+let aLog = store.get('mym-analiticas') || [];
+[gLog, wLog, aLog].forEach(list => list.forEach(e => { if (!e.id) e.id = newId(); if (!e.u) e.u = 1; }));
 const live = list => list.filter(e => !e.del);
 const pad = n => String(n).padStart(2,'0');
 const hoyISO = () => { const d = new Date(); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; };
@@ -895,6 +964,38 @@ function gEstado(e){
   return ['ok','En objetivo'];
 }
 $('#gMomento').innerHTML = MOMENTOS.map(m => `<option value="${m[0]}">${m[1]}</option>`).join('');
+/* Unir mediciones de después de comer con el plato del menú */
+const COMIDAS_PRINC = [['d','Desayuno'],['c','Comida'],['n','Cena']];
+function comidaPorHora(h){ const x = parseInt(h); return x < 12 ? 'd' : x < 18 ? 'c' : 'n'; }
+function platoDe(fISO, slot){
+  if (!slot || slot === 'otra') return null;
+  const wd = (new Date(fISO + 'T12:00').getDay() + 6) % 7;
+  const si = SLOTS[perfil.comidas].findIndex(x => x[0] === slot);
+  return si >= 0 && semana[wd] ? semana[wd][si] : null;
+}
+function opcionesComida(sel, fISO){
+  sel.innerHTML = COMIDAS_PRINC.map(([k, l]) => { const id = platoDe(fISO, k), r = id && byId(id); return `<option value="${k}">${l}${r ? ' · ' + r.n : ''}</option>`; }).join('') + `<option value="otra">Comí otra cosa</option>`;
+}
+function syncComidaField(prefix, fISO, h){
+  const show = $('#' + prefix + 'Momento').value === 'despues';
+  $('#' + prefix + 'ComidaF').hidden = !show;
+  if (show){ const keep = $('#' + prefix + 'Comida').value; opcionesComida($('#' + prefix + 'Comida'), fISO); $('#' + prefix + 'Comida').value = keep && $('#' + prefix + 'Comida').dataset.touched ? keep : comidaPorHora(h); }
+}
+function platoStats(){
+  const m = {};
+  live(gLog).filter(e => e.p && e.m === 'despues').forEach(e => { (m[e.p] = m[e.p] || []).push(e.v); });
+  const out = {};
+  Object.keys(m).forEach(id => { const v = m[id]; out[id] = {n: v.length, avg: Math.round(v.reduce((a,b) => a+b, 0) / v.length), max: Math.max(...v)}; });
+  return out;
+}
+function renderPlatos(){
+  const st = platoStats(), ids = Object.keys(st).filter(byId).sort((a,b) => st[b].avg - st[a].avg);
+  $('#gPlatos').innerHTML = ids.length ? ids.map(id => {
+    const x = st[id], cls = x.avg > 180 ? 'high' : x.avg < 70 ? 'low' : 'ok', lbl = x.avg > 180 ? 'Te sube' : x.avg < 70 ? 'Baja' : 'Te sienta bien';
+    return `<div class="plato"><span>${byId(id).n}</span><span class="v">${x.avg} mg/dL${x.n > 1 ? ` · ${x.n} medidas` : ''}</span><span class="pill ${cls}">${lbl}</span></div>`;
+  }).join('') + (ids.some(id => st[id].n < 2) ? `<p class="note">Con una sola medida es solo una pista: espera a tener dos o tres de cada plato antes de sacar conclusiones.</p>` : '')
+  : `<p class="empty-log">Aún no hay datos. La próxima vez que midas 2 horas después de comer, elige «2 h después de comer» y la comida, y aquí aparecerá el plato.</p>`;
+}
 function resetGForm(){ $('#gFecha').value = hoyISO(); $('#gHora').value = ahoraHM(); $('#gValor').value = ''; $('#gNota').value = ''; }
 function resetWForm(){ $('#wFecha').value = hoyISO(); $('#wPeso').value = ''; $('#wCintura').value = ''; }
 
@@ -961,8 +1062,9 @@ function renderGlucosa(){
   const from = Date.now() - 14*864e5;
   const pts = sorted.filter(e => e.t >= from).map(e => ({t:e.t, v:e.v, cls: gEstado(e)[0]==='ok' ? '' : gEstado(e)[0], tip:`${e.v} mg/dL · ${momento(e.m)[1].toLowerCase()} · ${fechaCorta(e.f)} ${e.h}`}));
   lineChart($('#gChart'), pts, {tMin: from, tMax: Date.now(), yMin: 40, yMax: 300, yStep: 40, band:[70,180], extra:[], label:'Glucosa de los últimos 14 días', empty:'Aún no hay mediciones. Añade la primera con el formulario de arriba y aquí verás cómo evoluciona tu glucosa.'});
-  $('#gTable').innerHTML = sorted.length ? `<table class="log"><thead><tr><th>Fecha</th><th>Hora</th><th>Momento</th><th>mg/dL</th><th>Estado</th><th>Nota</th><th></th></tr></thead><tbody>${
-    sorted.map(e => { const [c,l] = gEstado(e); return `<tr><td>${fechaCorta(e.f)}</td><td class="v">${e.h}</td><td>${momento(e.m)[1]}</td><td class="v">${e.v}</td><td><span class="pill ${c}">${l}</span></td><td>${esc(e.n||'')}</td><td>${delBtn('g', e.id)}</td></tr>`; }).join('')
+  renderPlatos();
+  $('#gTable').innerHTML = sorted.length ? `<table class="log"><thead><tr><th>Fecha</th><th>Hora</th><th>Momento</th><th>mg/dL</th><th>Estado</th><th>Plato / nota</th><th></th></tr></thead><tbody>${
+    sorted.map(e => { const [c,l] = gEstado(e); return `<tr><td>${fechaCorta(e.f)}</td><td class="v">${e.h}</td><td>${momento(e.m)[1]}</td><td class="v">${e.v}</td><td><span class="pill ${c}">${l}</span></td><td>${esc([e.p && byId(e.p) ? byId(e.p).n : '', e.n || ''].filter(Boolean).join(' · '))}</td><td>${delBtn('g', e.id)}</td></tr>`; }).join('')
   }</tbody></table>` : `<p class="empty-log">Tus mediciones aparecerán aquí, de la más reciente a la más antigua.</p>`;
 }
 
@@ -1044,7 +1146,9 @@ $('#gForm').addEventListener('submit', e => {
   e.preventDefault();
   const v = Math.round(parseFloat($('#gValor').value));
   if (!v) return;
-  gLog.push({id: newId(), u: Date.now(), f: $('#gFecha').value, h: $('#gHora').value, m: $('#gMomento').value, v, n: $('#gNota').value.trim()});
+  const gf = $('#gFecha').value, gm = $('#gMomento').value;
+  const gp = gm === 'despues' ? platoDe(gf, $('#gComida').value) : null;
+  gLog.push({id: newId(), u: Date.now(), f: gf, h: $('#gHora').value, m: gm, v, n: $('#gNota').value.trim(), ...(gp ? {p: gp} : {})});
   store.set('mym-glucosa', gLog); scheduleSync(); renderGlucosa(); renderHoy(); resetGForm(); $('#gValor').focus();
 });
 $('#wForm').addEventListener('submit', e => {
@@ -1061,9 +1165,10 @@ $('#wForm').addEventListener('submit', e => {
 document.addEventListener('click', e => {
   const b = e.target.closest('.del'); if (!b) return;
   if (!b.classList.contains('armed')){ b.classList.add('armed'); b.textContent = '¿Borrar? Sí'; setTimeout(() => { b.classList.remove('armed'); b.textContent = 'Borrar'; }, 3000); return; }
-  const id = b.dataset.i, list = b.dataset.kind === 'g' ? gLog : wLog, item = list.find(x => x.id === id);
+  const id = b.dataset.i, list = b.dataset.kind === 'g' ? gLog : b.dataset.kind === 'a' ? aLog : wLog, item = list.find(x => x.id === id);
   if (item){ for (const k of Object.keys(item)) if (k !== 'id') delete item[k]; item.del = true; item.u = Date.now(); }
-  if (b.dataset.kind === 'g'){ store.set('mym-glucosa', gLog); renderGlucosa(); }
+  if (b.dataset.kind === 'a'){ store.set('mym-analiticas', aLog); renderAnaliticas(); }
+  else if (b.dataset.kind === 'g'){ store.set('mym-glucosa', gLog); renderGlucosa(); }
   else { store.set('mym-peso', wLog); syncPesoPerfil(); renderPeso(); }
   scheduleSync();
 });
@@ -1091,6 +1196,131 @@ function showPrintMsg(b){
   setTimeout(() => m.remove(), 4000);
 }
 
+/* ---------- Analíticas y tensión ---------- */
+const A_CAMPOS = [['hba1c','HbA1c','%'],['col','Colesterol','mg/dL'],['ldl','LDL','mg/dL'],['hdl','HDL','mg/dL'],['tg','Triglicéridos','mg/dL']];
+function aEstado(k, v){
+  if (v == null) return null;
+  const hdlMin = perfil.sexo === 'm' ? 50 : 40;
+  const ok = {hba1c: v < 7, col: v < 200, ldl: v < 100, hdl: v >= hdlMin, tg: v < 150}[k];
+  return ok ? ['ok','En objetivo'] : ['high', k === 'hdl' ? 'Bajo' : 'Alto'];
+}
+function tensEstado(a, b){ if (!a || !b) return null; return a >= 140 || b >= 90 ? ['high','Alta'] : a >= 130 || b >= 80 ? ['high','Algo alta'] : a < 90 || b < 60 ? ['low','Baja'] : ['ok','En objetivo']; }
+function ultimo(k){ return live(aLog).map(e => ({...e, t: ts(e.f)})).sort((a,b) => b.t - a.t).find(e => e[k] != null); }
+function renderAnaliticas(){
+  const tiles = [['hba1c','HbA1c','%'],['ldl','LDL','mg/dL'],['tg','Triglicéridos','mg/dL']].map(([k,l,u]) => {
+    const e = ultimo(k), st = e && aEstado(k, e[k]);
+    return `<div class="stat"><span class="lbl">${l}</span><span class="val">${e ? fmt(e[k]) + (u === '%' ? ' %' : '') : '—'}</span><span class="sub">${e ? `<span class="pill ${st[0]}">${st[1]}</span> ${fechaCorta(e.f)}` : 'sin datos'}</span></div>`;
+  });
+  const t = ultimo('pas'), ts_ = t && tensEstado(t.pas, t.pad);
+  tiles.push(`<div class="stat"><span class="lbl">Tensión</span><span class="val">${t ? t.pas + '/' + t.pad : '—'}</span><span class="sub">${t ? `<span class="pill ${ts_[0]}">${ts_[1]}</span> ${fechaCorta(t.f)}` : 'sin datos'}</span></div>`);
+  $('#aStats').innerHTML = tiles.join('');
+  const rows = live(aLog).map(e => ({...e, t: ts(e.f)})).sort((a,b) => b.t - a.t);
+  const cell = (e, k) => { if (e[k] == null) return '<td></td>'; const st = aEstado(k, e[k]); return `<td class="v">${fmt(e[k])}${st && st[0] !== 'ok' ? ` <span class="pill ${st[0]}">${st[1]}</span>` : ''}</td>`; };
+  $('#aTable').innerHTML = rows.length ? `<table class="log"><thead><tr><th>Fecha</th><th>HbA1c %</th><th>Colest.</th><th>LDL</th><th>HDL</th><th>Triglic.</th><th>Tensión</th><th></th></tr></thead><tbody>${
+    rows.map(e => `<tr><td>${fechaCorta(e.f)}</td>${A_CAMPOS.map(([k]) => cell(e, k)).join('')}<td class="v">${e.pas ? e.pas + '/' + e.pad : ''}${e.pas && tensEstado(e.pas, e.pad)[0] !== 'ok' ? ` <span class="pill ${tensEstado(e.pas, e.pad)[0]}">${tensEstado(e.pas, e.pad)[1]}</span>` : ''}</td><td>${delBtn('a', e.id)}</td></tr>`).join('')
+  }</tbody></table>` : `<p class="empty-log">Tus analíticas y tomas de tensión aparecerán aquí.</p>`;
+}
+$('#aForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const num = id => { const v = parseFloat(String($(id).value).replace(',', '.')); return isNaN(v) ? null : v; };
+  const x = {hba1c: num('#aHba1c'), col: num('#aCol'), ldl: num('#aLdl'), hdl: num('#aHdl'), tg: num('#aTg'), pas: num('#aPas'), pad: num('#aPad')};
+  if (Object.values(x).every(v => v == null)){ $('#aMsg').textContent = 'Rellena al menos un valor.'; return; }
+  if ((x.pas == null) !== (x.pad == null)){ $('#aMsg').textContent = 'Para la tensión pon los dos números: la alta y la baja.'; return; }
+  Object.keys(x).forEach(k => x[k] == null && delete x[k]);
+  aLog.push({id: newId(), u: Date.now(), f: $('#aFecha').value, ...x});
+  store.set('mym-analiticas', aLog); scheduleSync();
+  $('#aMsg').textContent = 'Guardado.';
+  ['#aHba1c','#aCol','#aLdl','#aHdl','#aTg','#aPas','#aPad'].forEach(id => $(id).value = '');
+  renderAnaliticas();
+});
+
+/* ---------- Informe para el médico ---------- */
+function renderInforme(){
+  const dias = +$('#rDias').value, desde = Date.now() - dias*864e5, c = calc(perfil);
+  const g = live(gLog).map(e => ({...e, t: ts(e.f, e.h)})).filter(e => e.t >= desde).sort((a,b) => a.t - b.t);
+  const media = l => l.length ? Math.round(l.reduce((a,e) => a + e.v, 0) / l.length) : null;
+  const porMomento = MOMENTOS.map(([k, l]) => { const x = g.filter(e => e.m === k); return x.length ? `<div class="rep-kv"><span>${l}</span><span>${media(x)} mg/dL · ${x.length}</span></div>` : ''; }).join('');
+  const enObj = g.length ? Math.round(g.filter(e => gEstado(e)[0] === 'ok').length / g.length * 100) : null;
+  const bajas = g.filter(e => e.v < 70), graves = g.filter(e => e.v < 54);
+  const w = live(wLog).map(e => ({...e, t: ts(e.f)})).sort((a,b) => a.t - b.t), wIn = w.filter(e => e.t >= desde);
+  const wIni = wIn[0], wFin = wIn[wIn.length-1];
+  const med = perfil.meds.map(m => (MEDS.find(x => x[0] === m) || [m, m])[1]).join(', ') || '—';
+  const tipo = {1:'Tipo 1', 2:'Tipo 2', pre:'Prediabetes'}[perfil.tipo];
+  const fd = t => new Date(t).toLocaleDateString('es-ES', {day:'numeric', month:'short', year:'numeric'});
+  const analit = A_CAMPOS.map(([k, l, u]) => { const e = ultimo(k); return e ? `<div class="rep-kv"><span>${l} (${fechaCorta(e.f)})</span><span>${fmt(e[k])} ${u}</span></div>` : ''; }).join('');
+  const t = ultimo('pas');
+  const ps = platoStats(), platos = Object.keys(ps).filter(byId).sort((a,b) => ps[b].avg - ps[a].avg);
+  const chartId = 'repChart';
+  $('#report').innerHTML = `
+    <p class="note">Del ${fd(desde)} al ${fd(Date.now())}. ${perfil.ejemplo ? '<strong>Atención: el perfil es de ejemplo.</strong>' : ''}</p>
+    <h3>Paciente</h3>
+    <div class="rep-grid">
+      <div class="rep-kv"><span>Edad</span><span>${perfil.edad} años</span></div>
+      <div class="rep-kv"><span>Diabetes</span><span>${tipo}</span></div>
+      <div class="rep-kv"><span>Peso / IMC actual</span><span>${fmt(perfil.peso)} kg · ${fmt(c.imc.toFixed(1))}</span></div>
+      <div class="rep-kv"><span>Plan de comidas</span><span>${c.kcal} kcal · ${c.hc} g HC</span></div>
+    </div>
+    <p class="note">Medicación anotada: ${med}.</p>
+    <h3>Glucosa capilar</h3>
+    ${g.length ? `<div class="rep-grid">
+      <div class="rep-kv"><span>Mediciones</span><span>${g.length}</span></div>
+      <div class="rep-kv"><span>Media</span><span>${media(g)} mg/dL</span></div>
+      <div class="rep-kv"><span>En objetivo</span><span>${enObj} %</span></div>
+      <div class="rep-kv"><span>Hipoglucemias &lt;70</span><span>${bajas.length}${graves.length ? ` (${graves.length} &lt;54)` : ''}</span></div>
+    </div>
+    <div class="rep-grid">${porMomento}</div>
+    <div class="chartbox"><div id="${chartId}"></div></div>
+    ${bajas.length ? `<p class="note">Hipoglucemias: ${bajas.map(e => `${fechaCorta(e.f)} ${e.h} (${e.v})`).join(', ')}.</p>` : ''}` : '<p class="note">Sin mediciones en este periodo.</p>'}
+    <h3>Peso</h3>
+    ${wIn.length ? `<div class="rep-grid">
+      <div class="rep-kv"><span>Inicio del periodo</span><span>${fmt(wIni.p)} kg</span></div>
+      <div class="rep-kv"><span>Final del periodo</span><span>${fmt(wFin.p)} kg</span></div>
+      <div class="rep-kv"><span>Cambio</span><span>${(wFin.p - wIni.p > 0 ? '+' : '') + fmt(Math.round((wFin.p - wIni.p)*10)/10)} kg</span></div>
+      ${perfil.pesoObjetivo ? `<div class="rep-kv"><span>Objetivo</span><span>${fmt(perfil.pesoObjetivo)} kg</span></div>` : ''}
+    </div>` : '<p class="note">Sin pesadas en este periodo.</p>'}
+    <h3>Analíticas y tensión (último valor)</h3>
+    ${analit || t ? `<div class="rep-grid">${analit}${t ? `<div class="rep-kv"><span>Tensión (${fechaCorta(t.f)})</span><span>${t.pas}/${t.pad}</span></div>` : ''}</div>` : '<p class="note">Sin datos.</p>'}
+    ${platos.length ? `<h3>Glucosa 2 h después de comer, por plato</h3><div class="platos">${platos.map(id => `<div class="plato"><span>${byId(id).n}</span><span class="v">${ps[id].avg} mg/dL · ${ps[id].n}</span><span></span></div>`).join('')}</div>` : ''}
+    <p class="note">Generado con Menú y Movimiento. Datos apuntados por el paciente con su glucómetro y báscula.</p>`;
+  if (g.length) lineChart($('#' + chartId), g.map(e => ({t: e.t, v: e.v, cls: gEstado(e)[0] === 'ok' ? '' : gEstado(e)[0], tip: `${e.v} mg/dL · ${fechaCorta(e.f)} ${e.h}`})), {tMin: desde, tMax: Date.now(), yMin: 40, yMax: 300, yStep: 40, band: [70,180], extra: [], label: 'Glucosa del periodo', empty: ''});
+}
+$('#rDias').addEventListener('change', renderInforme);
+
+/* ---------- Recordatorios (Android) ---------- */
+const AVISOS = [
+  {id: 101, k: 'ayunas', titulo: 'Glucosa en ayunas', cuerpo: 'Mide tu glucosa antes de desayunar y apúntala en la app.', h: '08:00', on: true},
+  {id: 102, k: 'despues', titulo: 'Glucosa 2 h después de comer', cuerpo: 'Mide y apúntala: así sabrás cómo te sienta el plato de hoy.', h: '16:30', on: false},
+  {id: 103, k: 'paseoComida', titulo: 'Paseo después de comer', cuerpo: '10–15 minutos caminando bajan el pico de glucosa de la comida.', h: '15:30', on: true},
+  {id: 104, k: 'paseoCena', titulo: 'Paseo después de cenar', cuerpo: 'Un paseo corto después de cenar mejora la glucosa de la noche.', h: '21:45', on: false},
+  {id: 105, k: 'ejercicio', titulo: 'Rutina de ejercicio', cuerpo: 'Mira en la app qué ejercicio toca hoy.', h: '18:00', on: false},
+  {id: 106, k: 'peso', titulo: 'Pesarte (lunes)', cuerpo: 'Por la mañana, en ayunas y después de ir al baño. Apúntalo en la app.', h: '08:15', on: true, semanal: true}
+];
+const esAndroid = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+const Notis = esAndroid && window.Capacitor.registerPlugin ? window.Capacitor.registerPlugin('LocalNotifications') : null;
+function avisosCfg(){ const c = store.get('mym-avisos') || {}; return AVISOS.map(a => ({...a, ...(c[a.k] || {})})); }
+function renderAvisos(){
+  $('#tab-avisos').hidden = !Notis; $('#masAvisos').hidden = !Notis;
+  $('#avLista').innerHTML = avisosCfg().map(a => `<label class="aviso" for="av-${a.k}"><input type="checkbox" id="av-${a.k}" data-k="${a.k}" ${a.on ? 'checked' : ''}><strong>${a.titulo}</strong><input type="time" id="avh-${a.k}" data-k="${a.k}" value="${a.h}" aria-label="Hora de ${a.titulo}"><span class="sub">${a.cuerpo}</span></label>`).join('');
+}
+$('#avGuardar').addEventListener('click', async () => {
+  const cfg = {};
+  AVISOS.forEach(a => cfg[a.k] = {on: $('#av-' + a.k).checked, h: $('#avh-' + a.k).value || a.h});
+  store.set('mym-avisos', cfg);
+  if (!Notis){ $('#avMsg').textContent = 'Los recordatorios funcionan en la app de Android.'; return; }
+  try {
+    let perm = await Notis.checkPermissions();
+    if (perm.display !== 'granted') perm = await Notis.requestPermissions();
+    if (perm.display !== 'granted'){ $('#avMsg').textContent = 'Sin permiso para avisarte. Actívalo en Ajustes del móvil → Aplicaciones → Menú y Movimiento → Notificaciones.'; return; }
+    await Notis.cancel({notifications: AVISOS.map(a => ({id: a.id}))});
+    const lista = avisosCfg().filter(a => a.on).map(a => {
+      const [hh, mm] = a.h.split(':').map(Number);
+      return {id: a.id, title: a.titulo, body: a.cuerpo, schedule: {on: a.semanal ? {weekday: 2, hour: hh, minute: mm} : {hour: hh, minute: mm}, allowWhileIdle: true}};
+    });
+    if (lista.length) await Notis.schedule({notifications: lista});
+    $('#avMsg').textContent = lista.length ? `Listo: ${lista.length} recordatorio${lista.length > 1 ? 's' : ''} activado${lista.length > 1 ? 's' : ''}.` : 'Recordatorios desactivados.';
+  } catch(err){ $('#avMsg').textContent = 'No se pudieron programar los avisos (' + (err.message || err) + ').'; }
+});
+
 function momentoAhora(){
   const h = new Date().getHours();
   return h >= 22 || h < 5 ? 'dormir' : h < 10 ? 'ayunas' : 'despues';
@@ -1114,6 +1344,7 @@ function renderHoy(){
   // glucosa
   const g = live(gLog).map(e => ({...e, t: ts(e.f, e.h)})).sort((a,b) => b.t - a.t)[0];
   if (!$('#qMomento').dataset.touched) $('#qMomento').value = momentoAhora();
+  syncComidaField('q', hoyISO(), ahoraHM());
   $('#qUltima').innerHTML = g ? `Última: <strong class="num">${g.v} mg/dL</strong> <span class="pill ${gEstado(g)[0]}">${gEstado(g)[1]}</span> · ${fechaCorta(g.f)} ${g.h}` : 'Aún no has apuntado ninguna medición.';
   const hy = $('#qHypo');
   if (g && g.v < 70 && g.t > Date.now() - 3*36e5){ hy.hidden = false; hy.innerHTML = $('#gHypo').innerHTML; } else hy.hidden = true;
@@ -1130,27 +1361,34 @@ function renderHoy(){
   $('#hoyPeso').innerHTML = ph;
 }
 $('#qMomento').innerHTML = MOMENTOS.map(m => `<option value="${m[0]}">${m[1]}</option>`).join('');
-$('#qMomento').addEventListener('change', e => e.target.dataset.touched = '1');
+$('#qMomento').addEventListener('change', e => { e.target.dataset.touched = '1'; syncComidaField('q', hoyISO(), ahoraHM()); });
+$('#qComida').addEventListener('change', e => e.target.dataset.touched = '1');
+$('#gComida').addEventListener('change', e => e.target.dataset.touched = '1');
+['gMomento','gFecha','gHora'].forEach(id => $('#' + id).addEventListener('change', () => syncComidaField('g', $('#gFecha').value, $('#gHora').value)));
 $('#qForm').addEventListener('submit', e => {
   e.preventDefault();
   const v = Math.round(parseFloat($('#qValor').value)); if (!v) return;
-  gLog.push({id: newId(), u: Date.now(), f: hoyISO(), h: ahoraHM(), m: $('#qMomento').value, v, n: ''});
+  const qp = $('#qMomento').value === 'despues' ? platoDe(hoyISO(), $('#qComida').value) : null;
+  gLog.push({id: newId(), u: Date.now(), f: hoyISO(), h: ahoraHM(), m: $('#qMomento').value, v, n: '', ...(qp ? {p: qp} : {})});
+  delete $('#qComida').dataset.touched;
   store.set('mym-glucosa', gLog); scheduleSync();
   $('#qValor').value = ''; delete $('#qMomento').dataset.touched;
   renderGlucosa(); renderHoy();
 });
-function renderAll(){ renderStats(); renderMenu(); renderShop(); renderExercise(); renderGlucosa(); renderPeso(); renderHoy(); }
+function renderAll(){ renderStats(); renderMenu(); renderShop(); renderExercise(); renderGlucosa(); renderPeso(); renderAnaliticas(); renderHoy(); }
 
 /* ---------- Eventos ---------- */
 document.querySelectorAll('nav[role=tablist] button').forEach(b => b.addEventListener('click', () => showTab(b.dataset.tab)));
-const PANELES = ['hoy','menu','compra','ejercicio','glucosa','peso','perfil','mas'];
-const EN_MAS = ['compra','ejercicio','perfil','mas'];
+const PANELES = ['hoy','menu','compra','ejercicio','glucosa','peso','analiticas','informe','avisos','perfil','mas'];
+const EN_MAS = ['compra','ejercicio','analiticas','informe','avisos','perfil','mas'];
 function showTab(t){
   if (!PANELES.includes(t)) t = 'hoy';
   document.querySelectorAll('nav[role=tablist] button').forEach(b => b.setAttribute('aria-selected', b.dataset.tab===t));
   document.querySelectorAll('.bottomnav button').forEach(b => { const on = b.dataset.go === t || (b.dataset.go === 'mas' && EN_MAS.includes(t)); if (on) b.setAttribute('aria-current','page'); else b.removeAttribute('aria-current'); });
   PANELES.forEach(x => $('#p-'+x).hidden = x!==t);
   if (t === 'hoy') renderHoy();
+  if (t === 'informe') renderInforme();
+  if (t === 'menu') renderMenu();
   if (t !== 'mas') store.set('mym-tab', t);
   window.scrollTo(0, 0);
 }
@@ -1230,7 +1468,7 @@ const Sync = (() => {
   }
 
   function localDoc(){
-    return {perfil, perfilU: meta.perfilU || 0, exSeed, semana, semanaU: meta.semanaU || 0, shop: store.get('mym-shopcheck') || [], g: gLog, w: wLog};
+    return {perfil, perfilU: meta.perfilU || 0, exSeed, semana, semanaU: meta.semanaU || 0, shop: store.get('mym-shopcheck') || [], g: gLog, w: wLog, a: aLog};
   }
   function mergeList(a, b){
     const m = new Map();
@@ -1243,17 +1481,18 @@ const Sync = (() => {
     if ((rem.semanaU || 0) > (loc.semanaU || 0) && Array.isArray(rem.semana)){ out.semana = rem.semana; out.semanaU = rem.semanaU; out.shop = rem.shop || []; }
     out.g = mergeList(loc.g, rem.g || []);
     out.w = mergeList(loc.w, rem.w || []);
+    out.a = mergeList(loc.a || [], rem.a || []);
     return out;
   }
-  const canon = d => JSON.stringify([d.perfil, d.perfilU, d.exSeed, d.semana, d.semanaU, d.shop, [...d.g].sort((a,b) => a.id < b.id ? -1 : 1), [...d.w].sort((a,b) => a.id < b.id ? -1 : 1)]);
+  const canon = d => JSON.stringify([d.perfil, d.perfilU, d.exSeed, d.semana, d.semanaU, d.shop, [...d.g].sort((a,b) => a.id < b.id ? -1 : 1), [...d.w].sort((a,b) => a.id < b.id ? -1 : 1), [...(d.a || [])].sort((a,b) => a.id < b.id ? -1 : 1)]);
   function applyDoc(d){
     perfil = d.perfil; exSeed = d.exSeed || exSeed;
     if (Array.isArray(d.semana) && d.semana.length === 7 && d.semana.every(day => day.length === SLOTS[perfil.comidas].length && day.every(byId))) semana = d.semana;
     else { semana = makeWeek(perfil); d.semanaU = 0; }
     meta = {perfilU: d.perfilU, semanaU: d.semanaU};
-    gLog = d.g; wLog = d.w;
+    gLog = d.g; wLog = d.w; aLog = d.a || [];
     store.set('mym-perfil', perfil); store.set('mym-exseed', exSeed); store.set('mym-semana', semana); store.set('mym-shopcheck', d.shop || []);
-    store.set('mym-meta', meta); store.set('mym-glucosa', gLog); store.set('mym-peso', wLog);
+    store.set('mym-meta', meta); store.set('mym-glucosa', gLog); store.set('mym-peso', wLog); store.set('mym-analiticas', aLog);
     fillForm(perfil); resetWForm(); renderAll();
   }
 
@@ -1333,8 +1572,8 @@ const Sync = (() => {
 scheduleSync = () => Sync.schedule();
 
 fillForm(perfil);
-resetGForm(); resetWForm();
-renderAll();
+resetGForm(); resetWForm(); $('#aFecha').value = hoyISO();
+renderAll(); renderAvisos();
 Sync.init();
 showTab('hoy');
 </script>

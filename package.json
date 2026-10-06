@@ -1,6 +1,6 @@
 {
   "name": "menu-y-movimiento",
-  "version": "4.0.0",
+  "version": "5.0.0",
   "description": "Menú semanal para diabetes y rutina de ejercicios en casa",
   "main": "index.js",
   "scripts": {
@@ -12,7 +12,8 @@
   "license": "ISC",
   "dependencies": {
     "@capacitor/android": "^7.6.9",
-    "@capacitor/core": "^7.6.9"
+    "@capacitor/core": "^7.6.9",
+    "@capacitor/local-notifications": "^7.0.7"
   },
   "devDependencies": {
     "@capacitor/cli": "^7.6.9",
