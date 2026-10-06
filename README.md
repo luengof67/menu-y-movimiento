@@ -17,6 +17,10 @@ Cada vez que se sube un cambio a la rama `main`, GitHub compila las dos versione
 
 **Windows:** descomprime el ZIP y abre `Menu y Movimiento.exe`. Si aparece «Windows protegió su PC», pulsa «Más información» y «Ejecutar de todas formas».
 
+## Sincronizar móvil y ordenador
+
+En la app, pestaña **Mi perfil → Sincronizar entre dispositivos**. Los datos se guardan cifrados (AES-256) con tu contraseña en un repositorio privado `mym-datos`. Los pasos para crear el permiso de GitHub están en la propia app.
+
 ## Estructura
 
 | Carpeta | Qué contiene |

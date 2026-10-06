@@ -140,12 +140,23 @@ table.log td.v{font-family:var(--f-num);font-variant-numeric:tabular-nums;white-
 .hypo{background:var(--warn-soft);border:1px solid var(--warn);border-radius:12px;padding:12px 16px}
 .print-only{display:none}
 .print-note{font-size:.85rem;color:var(--muted)}
+/* Sincronización */
+.sync-chip{justify-self:start;display:inline-flex;align-items:center;gap:8px;font:inherit;font-size:.85rem;color:var(--muted);background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:4px 12px;cursor:pointer}
+.sync-chip .dot{width:8px;height:8px;border-radius:50%;background:var(--muted)}
+.sync-chip[data-s="ok"] .dot{background:var(--accent)}
+.sync-chip[data-s="busy"] .dot{background:var(--carb)}
+.sync-chip[data-s="err"] .dot{background:var(--warn)}
+.sync-chip[data-s="err"]{color:var(--warn)}
+#syncBox ol{margin:0;padding-left:20px;display:grid;gap:6px;font-size:.92rem}
+#syncBox details summary{cursor:pointer;font-weight:700;color:var(--accent)}
+#syncMsg{font-size:.92rem}
+#syncMsg.err{color:var(--warn)}
 /* Impresión */
 @media print{
   :root:not(#_p){--bg:#FFFFFF;--surface:#FFFFFF;--ink:#000000;--muted:#444444;--line:#BBBBBB;--accent:#0E7A6C;--accent-soft:#E3F2EF;--carb:#8A5A06;--carb-soft:#F6EBD6;--warn:#B3261E;--warn-soft:#FBE4E2;color-scheme:light}
   body{font-size:11pt}
   .wrap{max-width:none;padding:0;gap:12px}
-  nav,.btn,.swap,.del,.entry,#form,.banner,.lede,.print-note,.tips{display:none!important}
+  nav,.btn,.swap,.del,.entry,#form,#syncBox,.sync-chip,.banner,.lede,.print-note,.tips{display:none!important}
   .print-only{display:block}
   .stats{grid-template-columns:repeat(4,1fr)}
   .day,.session,.box,.chartbox,.stat,tr{break-inside:avoid}
@@ -162,6 +173,7 @@ table.log td.v{font-family:var(--f-num);font-variant-numeric:tabular-nums;white-
 <div class="wrap">
   <header>
     <h1>Menú y Movimiento</h1>
+    <button class="sync-chip" id="syncChip" type="button" data-s="off" hidden><span class="dot"></span><span id="syncChipTxt">Sin sincronizar</span></button>
     <p class="lede">Tu menú semanal pensado para la diabetes, con los carbohidratos contados en cada comida, y una rutina de ejercicios para hacer en casa. Rellena tu perfil y se ajusta a ti.</p>
   </header>
 
@@ -316,6 +328,33 @@ table.log td.v{font-family:var(--f-num);font-variant-numeric:tabular-nums;white-
       </fieldset>
 
       <div class="row"><button class="btn" type="submit">Guardar y crear mi plan</button><span class="note" id="saved"></span></div>
+    </form>
+
+    <form id="syncForm">
+      <fieldset id="syncBox">
+        <legend>Sincronizar entre dispositivos</legend>
+        <p class="note">Tu perfil, el menú, la glucosa y el peso se guardan cifrados en un repositorio privado de tu GitHub. Cada móvil u ordenador se pone al día solo al abrir la app y cada vez que apuntas algo.</p>
+        <p class="note" id="syncWebOnly" hidden><strong>La sincronización funciona en las apps de Windows y Android.</strong> Esta versión web no puede conectarse a GitHub.</p>
+        <details>
+          <summary>Cómo configurarlo (una sola vez)</summary>
+          <ol>
+            <li>En GitHub, crea un repositorio <strong>privado</strong> llamado <code>mym-datos</code> (botón «New», marca «Private» y «Add a README»).</li>
+            <li>Crea un permiso para la app en <strong>github.com/settings/personal-access-tokens/new</strong>: nombre «Menú y Movimiento»; caducidad, la más larga que te deje; en «Repository access» elige «Only select repositories» y marca <code>mym-datos</code>; en «Permissions», «Contents: Read and write». Pulsa «Generate token» y copia el código que empieza por <code>github_pat_</code>.</li>
+            <li>Rellena aquí los datos y pulsa «Conectar». Repite en cada dispositivo con el <strong>mismo permiso y la misma contraseña</strong>.</li>
+          </ol>
+        </details>
+        <div class="fields">
+          <label class="field">Usuario de GitHub<input id="syUser" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="luengof67"></label>
+          <label class="field">Repositorio de datos<input id="syRepo" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" value="mym-datos"></label>
+          <label class="field">Permiso (token)<input id="syToken" type="password" autocomplete="off" spellcheck="false" placeholder="github_pat_..."></label>
+          <label class="field">Contraseña de cifrado<input id="syPass" type="password" autocomplete="new-password" placeholder="mínimo 8 caracteres"></label>
+        </div>
+        <p class="note">Si olvidas la contraseña de cifrado, nadie podrá leer la copia de GitHub; lo guardado en cada dispositivo no se pierde. Anótala en un sitio seguro.</p>
+        <div class="row">
+          <div class="row"><button class="btn" type="submit" id="syConnect">Conectar</button><button class="btn ghost" type="button" id="syNow" hidden>Sincronizar ahora</button><button class="btn ghost" type="button" id="syOff" hidden>Desconectar este dispositivo</button></div>
+          <span id="syncMsg" class="note"></span>
+        </div>
+      </fieldset>
     </form>
   </section>
 
@@ -551,6 +590,9 @@ const fmt = n => String(n).replace('.', ',');
 let perfil = store.get('mym-perfil') || SAMPLE;
 let semana = store.get('mym-semana');
 let exSeed = store.get('mym-exseed') || Math.floor(Math.random()*1000);
+let meta = store.get('mym-meta') || {perfilU: store.get('mym-perfil') && !store.get('mym-perfil').ejemplo ? 1 : 0, semanaU: store.get('mym-semana') ? 1 : 0};
+function touch(...kinds){ kinds.forEach(k => meta[k+'U'] = Date.now()); store.set('mym-meta', meta); scheduleSync(); }
+let scheduleSync = () => {};
 function validWeek(w){ return Array.isArray(w) && w.length===7 && w.every(d => d.length===SLOTS[perfil.comidas].length && d.every(byId)); }
 if (perfil.ejemplo) perfil = {...SAMPLE, pesoObjetivo: perfil.pesoObjetivo || null};
 if (store.get('mym-v') !== 2) { semana = null; store.set('mym-v', 2); }
@@ -667,6 +709,9 @@ const MOMENTOS = [['ayunas','En ayunas',80,130],['antes','Antes de comer o cenar
 const momento = k => MOMENTOS.find(m => m[0]===k) || MOMENTOS[5];
 let gLog = store.get('mym-glucosa') || [];
 let wLog = store.get('mym-peso') || [];
+const newId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+[gLog, wLog].forEach(list => list.forEach(e => { if (!e.id) e.id = newId(); if (!e.u) e.u = 1; }));
+const live = list => list.filter(e => !e.del);
 const pad = n => String(n).padStart(2,'0');
 const hoyISO = () => { const d = new Date(); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; };
 const ahoraHM = () => { const d = new Date(); return `${pad(d.getHours())}:${pad(d.getMinutes())}`; };
@@ -730,7 +775,7 @@ function niceStep(r){ const raw = r / 5, p = Math.pow(10, Math.floor(Math.log10(
 function delBtn(kind, i){ return `<button class="del" type="button" data-kind="${kind}" data-i="${i}">Borrar</button>`; }
 
 function renderGlucosa(){
-  const sorted = gLog.map((e,i) => ({...e, i, t: ts(e.f, e.h)})).sort((a,b) => b.t - a.t);
+  const sorted = live(gLog).map(e => ({...e, t: ts(e.f, e.h)})).sort((a,b) => b.t - a.t);
   const week = sorted.filter(e => e.t >= Date.now() - 7*864e5);
   const bajas = week.filter(e => e.v < 70).length;
   const media = week.length ? Math.round(week.reduce((a,e) => a + e.v, 0) / week.length) : null;
@@ -750,12 +795,12 @@ function renderGlucosa(){
   const pts = sorted.filter(e => e.t >= from).map(e => ({t:e.t, v:e.v, cls: gEstado(e)[0]==='ok' ? '' : gEstado(e)[0], tip:`${e.v} mg/dL · ${momento(e.m)[1].toLowerCase()} · ${fechaCorta(e.f)} ${e.h}`}));
   lineChart($('#gChart'), pts, {tMin: from, tMax: Date.now(), yMin: 40, yMax: 300, yStep: 40, band:[70,180], extra:[], label:'Glucosa de los últimos 14 días', empty:'Aún no hay mediciones. Añade la primera con el formulario de arriba y aquí verás cómo evoluciona tu glucosa.'});
   $('#gTable').innerHTML = sorted.length ? `<table class="log"><thead><tr><th>Fecha</th><th>Hora</th><th>Momento</th><th>mg/dL</th><th>Estado</th><th>Nota</th><th></th></tr></thead><tbody>${
-    sorted.map(e => { const [c,l] = gEstado(e); return `<tr><td>${fechaCorta(e.f)}</td><td class="v">${e.h}</td><td>${momento(e.m)[1]}</td><td class="v">${e.v}</td><td><span class="pill ${c}">${l}</span></td><td>${esc(e.n||'')}</td><td>${delBtn('g', e.i)}</td></tr>`; }).join('')
+    sorted.map(e => { const [c,l] = gEstado(e); return `<tr><td>${fechaCorta(e.f)}</td><td class="v">${e.h}</td><td>${momento(e.m)[1]}</td><td class="v">${e.v}</td><td><span class="pill ${c}">${l}</span></td><td>${esc(e.n||'')}</td><td>${delBtn('g', e.id)}</td></tr>`; }).join('')
   }</tbody></table>` : `<p class="empty-log">Tus mediciones aparecerán aquí, de la más reciente a la más antigua.</p>`;
 }
 
 function renderPeso(){
-  const sorted = wLog.map((e,i) => ({...e, i, t: ts(e.f)})).sort((a,b) => b.t - a.t);
+  const sorted = live(wLog).map(e => ({...e, t: ts(e.f)})).sort((a,b) => b.t - a.t);
   const last = sorted[0], first = sorted[sorted.length-1];
   const objetivo = perfil.pesoObjetivo ? +perfil.pesoObjetivo : null;
   const near = days => { const lim = Date.now() - days*864e5; return sorted.find(e => e.t <= lim); };
@@ -769,14 +814,14 @@ function renderPeso(){
   const pts = sorted.map(e => ({t:e.t, v:e.p, tip:`${fmt(e.p)} kg · ${fechaCorta(e.f)}`}));
   lineChart($('#wChart'), pts, {goal: objetivo, extra: objetivo ? [objetivo] : [], label:'Evolución del peso', empty:'Aún no hay pesadas. Añade la de hoy y aquí verás tu evolución semana a semana.'});
   $('#wTable').innerHTML = sorted.length ? `<table class="log"><thead><tr><th>Fecha</th><th>Peso</th><th>Cambio</th><th>Cintura</th><th></th></tr></thead><tbody>${
-    sorted.map((e,k) => { const prev = sorted[k+1]; return `<tr><td>${fechaCorta(e.f)}</td><td class="v">${fmt(e.p)} kg</td><td class="v">${prev ? diff(e, prev) : ''}</td><td class="v">${e.c ? fmt(e.c) + ' cm' : ''}</td><td>${delBtn('w', e.i)}</td></tr>`; }).join('')
+    sorted.map((e,k) => { const prev = sorted[k+1]; return `<tr><td>${fechaCorta(e.f)}</td><td class="v">${fmt(e.p)} kg</td><td class="v">${prev ? diff(e, prev) : ''}</td><td class="v">${e.c ? fmt(e.c) + ' cm' : ''}</td><td>${delBtn('w', e.id)}</td></tr>`; }).join('')
   }</tbody></table>` : `<p class="empty-log">Tus pesadas aparecerán aquí.</p>`;
 }
 
 function syncPesoPerfil(){
-  const last = wLog.map(e => ({...e, t: ts(e.f)})).sort((a,b) => b.t - a.t)[0];
+  const last = live(wLog).map(e => ({...e, t: ts(e.f)})).sort((a,b) => b.t - a.t)[0];
   if (last && Math.abs(last.p - perfil.peso) > 0.05){
-    perfil.peso = last.p; delete perfil.ejemplo; store.set('mym-perfil', perfil); fillForm(perfil);
+    perfil.peso = last.p; delete perfil.ejemplo; store.set('mym-perfil', perfil); touch('perfil'); fillForm(perfil);
     renderStats(); renderMenu(); renderShop();
   }
 }
@@ -785,28 +830,30 @@ $('#gForm').addEventListener('submit', e => {
   e.preventDefault();
   const v = Math.round(parseFloat($('#gValor').value));
   if (!v) return;
-  gLog.push({f: $('#gFecha').value, h: $('#gHora').value, m: $('#gMomento').value, v, n: $('#gNota').value.trim()});
-  store.set('mym-glucosa', gLog); renderGlucosa(); resetGForm(); $('#gValor').focus();
+  gLog.push({id: newId(), u: Date.now(), f: $('#gFecha').value, h: $('#gHora').value, m: $('#gMomento').value, v, n: $('#gNota').value.trim()});
+  store.set('mym-glucosa', gLog); scheduleSync(); renderGlucosa(); resetGForm(); $('#gValor').focus();
 });
 $('#wForm').addEventListener('submit', e => {
   e.preventDefault();
   const p = parseFloat(String($('#wPeso').value).replace(',', '.'));
   const obj = parseFloat(String($('#wObjetivo').value).replace(',', '.'));
-  perfil.pesoObjetivo = obj || null; store.set('mym-perfil', perfil);
+  if ((perfil.pesoObjetivo || null) !== (obj || null)){ perfil.pesoObjetivo = obj || null; store.set('mym-perfil', perfil); touch('perfil'); }
   if (p){
     const c = parseFloat(String($('#wCintura').value).replace(',', '.')) || null;
-    const f = $('#wFecha').value, idx = wLog.findIndex(x => x.f === f);
-    if (idx >= 0) wLog[idx] = {f, p, c}; else wLog.push({f, p, c});
-    store.set('mym-peso', wLog); syncPesoPerfil();
+    const f = $('#wFecha').value, prev = wLog.find(x => x.f === f && !x.del);
+    if (prev) Object.assign(prev, {p, c, u: Date.now()}); else wLog.push({id: newId(), u: Date.now(), f, p, c});
+    store.set('mym-peso', wLog); scheduleSync(); syncPesoPerfil();
   }
   renderPeso(); resetWForm();
 });
 document.addEventListener('click', e => {
   const b = e.target.closest('.del'); if (!b) return;
   if (!b.classList.contains('armed')){ b.classList.add('armed'); b.textContent = '¿Borrar? Sí'; setTimeout(() => { b.classList.remove('armed'); b.textContent = 'Borrar'; }, 3000); return; }
-  const i = +b.dataset.i;
-  if (b.dataset.kind === 'g'){ gLog.splice(i, 1); store.set('mym-glucosa', gLog); renderGlucosa(); }
-  else { wLog.splice(i, 1); store.set('mym-peso', wLog); syncPesoPerfil(); renderPeso(); }
+  const id = b.dataset.i, list = b.dataset.kind === 'g' ? gLog : wLog, item = list.find(x => x.id === id);
+  if (item){ for (const k of Object.keys(item)) if (k !== 'id') delete item[k]; item.del = true; item.u = Date.now(); }
+  if (b.dataset.kind === 'g'){ store.set('mym-glucosa', gLog); renderGlucosa(); }
+  else { store.set('mym-peso', wLog); syncPesoPerfil(); renderPeso(); }
+  scheduleSync();
 });
 
 /* ---------- Imprimir ---------- */
@@ -841,7 +888,7 @@ function showTab(t){
   ['menu','compra','ejercicio','glucosa','peso','perfil'].forEach(x => $('#p-'+x).hidden = x!==t);
   store.set('mym-tab', t);
 }
-$('#regen').addEventListener('click', () => { semana = makeWeek(perfil); store.set('mym-semana', semana); store.set('mym-shopcheck', []); renderMenu(); renderShop(); });
+$('#regen').addEventListener('click', () => { semana = makeWeek(perfil); store.set('mym-semana', semana); store.set('mym-shopcheck', []); touch('semana'); renderMenu(); renderShop(); });
 $('#days').addEventListener('click', e => {
   const b = e.target.closest('.swap'); if (!b) return;
   const d = +b.dataset.d, s = +b.dataset.s, slot = SLOTS[perfil.comidas][s][0];
@@ -849,11 +896,11 @@ $('#days').addEventListener('click', e => {
   const opts = candidates(perfil, slot).filter(r => !today.includes(r.id));
   if (!opts.length) return;
   semana[d][s] = weightedOrder(opts, perfil.gustos)[0].id;
-  store.set('mym-semana', semana); renderMenu(); renderShop();
+  store.set('mym-semana', semana); touch('semana'); renderMenu(); renderShop();
 });
 $('#shop').addEventListener('change', e => {
   const checked = [...document.querySelectorAll('#shop input:checked')].map(i => i.dataset.item);
-  store.set('mym-shopcheck', checked);
+  store.set('mym-shopcheck', checked); touch('semana');
 });
 $('#copyList').addEventListener('click', () => {
   const {count, groups} = buildShop();
@@ -861,7 +908,7 @@ $('#copyList').addEventListener('click', () => {
   const fb = () => { const t = $('#copyFallback'); t.hidden = false; t.value = txt; t.select(); };
   try { navigator.clipboard.writeText(txt).then(() => { $('#copyList').textContent = 'Copiada'; setTimeout(() => $('#copyList').textContent = 'Copiar lista', 1800); }, fb); } catch(err){ fb(); }
 });
-$('#regenEx').addEventListener('click', () => { exSeed = Math.floor(Math.random()*100000); store.set('mym-exseed', exSeed); renderExercise(); });
+$('#regenEx').addEventListener('click', () => { exSeed = Math.floor(Math.random()*100000); store.set('mym-exseed', exSeed); touch('perfil'); renderExercise(); });
 $('#form').addEventListener('submit', e => {
   e.preventDefault();
   const p = readForm();
@@ -869,15 +916,154 @@ $('#form').addEventListener('submit', e => {
   const changedMeals = p.comidas !== perfil.comidas;
   p.pesoObjetivo = perfil.pesoObjetivo || null;
   perfil = p; store.set('mym-perfil', perfil);
-  semana = makeWeek(perfil); store.set('mym-semana', semana); store.set('mym-shopcheck', []);
+  semana = makeWeek(perfil); store.set('mym-semana', semana); store.set('mym-shopcheck', []); touch('perfil', 'semana');
   renderAll();
   $('#saved').textContent = 'Guardado. Tu menú y tu rutina ya están actualizados.';
   showTab('menu'); window.scrollTo({top:0, behavior:'smooth'});
 });
 
+/* ---------- Sincronización con GitHub (datos cifrados AES-GCM) ---------- */
+const Sync = (() => {
+  const API = 'https://api.github.com';
+  const FILE = 'datos-menu-y-movimiento.json';
+  let cfg = store.get('mym-sync');           // {user, repo, token, pass}
+  let timer = null, running = false, again = false, keyCache = {};
+  const te = new TextEncoder(), td = new TextDecoder();
+  const toB64 = bytes => { let s = ''; const b = new Uint8Array(bytes); for (let i = 0; i < b.length; i += 0x8000) s += String.fromCharCode.apply(null, b.subarray(i, i + 0x8000)); return btoa(s); };
+  const fromB64 = str => Uint8Array.from(atob(str.replace(/\s/g, '')), c => c.charCodeAt(0));
+
+  async function key(pass, salt){
+    const id = pass + '|' + toB64(salt);
+    if (!keyCache[id]){
+      const base = await crypto.subtle.importKey('raw', te.encode(pass), 'PBKDF2', false, ['deriveKey']);
+      keyCache[id] = await crypto.subtle.deriveKey({name: 'PBKDF2', salt, iterations: 250000, hash: 'SHA-256'}, base, {name: 'AES-GCM', length: 256}, false, ['encrypt', 'decrypt']);
+    }
+    return keyCache[id];
+  }
+  async function encrypt(obj, pass){
+    const salt = crypto.getRandomValues(new Uint8Array(16)), iv = crypto.getRandomValues(new Uint8Array(12));
+    const data = await crypto.subtle.encrypt({name: 'AES-GCM', iv}, await key(pass, salt), te.encode(JSON.stringify(obj)));
+    return JSON.stringify({app: 'menu-y-movimiento', v: 1, salt: toB64(salt), iv: toB64(iv), data: toB64(data)});
+  }
+  async function decrypt(text, pass){
+    const env = JSON.parse(text);
+    try {
+      const plain = await crypto.subtle.decrypt({name: 'AES-GCM', iv: fromB64(env.iv)}, await key(pass, fromB64(env.salt)), fromB64(env.data));
+      return JSON.parse(td.decode(plain));
+    } catch(e){ throw new Error('PASS'); }
+  }
+  async function gh(path, opts = {}){
+    const r = await fetch(API + path, {cache: 'no-store', ...opts, headers: {'Accept': 'application/vnd.github+json', 'Authorization': 'Bearer ' + cfg.token, 'X-GitHub-Api-Version': '2022-11-28', ...(opts.headers || {})}});
+    return r;
+  }
+
+  function localDoc(){
+    return {perfil, perfilU: meta.perfilU || 0, exSeed, semana, semanaU: meta.semanaU || 0, shop: store.get('mym-shopcheck') || [], g: gLog, w: wLog};
+  }
+  function mergeList(a, b){
+    const m = new Map();
+    [...a, ...b].forEach(e => { const cur = m.get(e.id); if (!cur || (e.u || 0) > (cur.u || 0)) m.set(e.id, e); });
+    return [...m.values()];
+  }
+  function merge(loc, rem){
+    const out = {...loc};
+    if ((rem.perfilU || 0) > (loc.perfilU || 0)){ out.perfil = rem.perfil; out.perfilU = rem.perfilU; out.exSeed = rem.exSeed; }
+    if ((rem.semanaU || 0) > (loc.semanaU || 0) && Array.isArray(rem.semana)){ out.semana = rem.semana; out.semanaU = rem.semanaU; out.shop = rem.shop || []; }
+    out.g = mergeList(loc.g, rem.g || []);
+    out.w = mergeList(loc.w, rem.w || []);
+    return out;
+  }
+  const canon = d => JSON.stringify([d.perfil, d.perfilU, d.exSeed, d.semana, d.semanaU, d.shop, [...d.g].sort((a,b) => a.id < b.id ? -1 : 1), [...d.w].sort((a,b) => a.id < b.id ? -1 : 1)]);
+  function applyDoc(d){
+    perfil = d.perfil; exSeed = d.exSeed || exSeed;
+    if (Array.isArray(d.semana) && d.semana.length === 7 && d.semana.every(day => day.length === SLOTS[perfil.comidas].length && day.every(byId))) semana = d.semana;
+    else { semana = makeWeek(perfil); d.semanaU = 0; }
+    meta = {perfilU: d.perfilU, semanaU: d.semanaU};
+    gLog = d.g; wLog = d.w;
+    store.set('mym-perfil', perfil); store.set('mym-exseed', exSeed); store.set('mym-semana', semana); store.set('mym-shopcheck', d.shop || []);
+    store.set('mym-meta', meta); store.set('mym-glucosa', gLog); store.set('mym-peso', wLog);
+    fillForm(perfil); resetWForm(); renderAll();
+  }
+
+  function setStatus(state, text){
+    const chip = $('#syncChip'); chip.hidden = !cfg; chip.dataset.s = state; $('#syncChipTxt').textContent = text;
+    const msg = $('#syncMsg'); msg.textContent = text; msg.className = 'note' + (state === 'err' ? ' err' : '');
+  }
+  const hora = () => new Date().toLocaleTimeString('es-ES', {hour: '2-digit', minute: '2-digit'});
+  function errText(e){
+    if (e.message === 'PASS') return 'La contraseña de cifrado no coincide con la de tus otros dispositivos.';
+    if (e.message === '401' || e.message === '403') return 'GitHub no acepta el permiso: revisa que el token sea correcto, no haya caducado y tenga «Contents: Read and write».';
+    if (e.message === 'REPO') return `No encuentro el repositorio ${cfg.user}/${cfg.repo}, o el permiso no tiene acceso a él.`;
+    if (e instanceof TypeError) return 'Sin conexión. Se sincronizará cuando vuelvas a tener internet.';
+    return 'No se pudo sincronizar (' + e.message + '). Se volverá a intentar.';
+  }
+
+  async function run(){
+    if (!cfg) return;
+    if (running){ again = true; return; }
+    running = true; setStatus('busy', 'Sincronizando…');
+    try {
+      for (let attempt = 0; attempt < 3; attempt++){
+        const path = `/repos/${encodeURIComponent(cfg.user)}/${encodeURIComponent(cfg.repo)}/contents/${FILE}`;
+        const r = await gh(path);
+        let sha = null, remote = null;
+        if (r.status === 200){ const j = await r.json(); sha = j.sha; remote = await decrypt(td.decode(fromB64(j.content)), cfg.pass); }
+        else if (r.status === 404){ const rr = await gh(`/repos/${encodeURIComponent(cfg.user)}/${encodeURIComponent(cfg.repo)}`); if (rr.status !== 200) throw new Error(rr.status === 401 || rr.status === 403 ? String(rr.status) : 'REPO'); }
+        else throw new Error(String(r.status));
+        const loc = localDoc();
+        const merged = remote ? merge(loc, remote) : loc;
+        if (canon(merged) !== canon(loc)) applyDoc(merged);
+        if (remote && canon(merged) === canon(remote)) break;
+        const body = {message: 'Sincronización ' + new Date().toISOString(), content: toB64(te.encode(await encrypt(localDoc(), cfg.pass)))};
+        if (sha) body.sha = sha;
+        const w = await gh(path, {method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)});
+        if (w.status === 200 || w.status === 201) break;
+        if (w.status === 409 || w.status === 422) continue;   // otro dispositivo escribió a la vez: volver a leer y fusionar
+        throw new Error(String(w.status));
+      }
+      store.set('mym-synced', Date.now());
+      setStatus('ok', 'Sincronizado a las ' + hora());
+    } catch(e){
+      setStatus('err', errText(e));
+    } finally {
+      running = false;
+      if (again){ again = false; schedule(1500); }
+    }
+  }
+  function schedule(ms = 2500){ if (!cfg) return; clearTimeout(timer); timer = setTimeout(run, ms); }
+
+  function showCfg(){
+    $('#syUser').value = cfg ? cfg.user : ''; $('#syRepo').value = cfg ? cfg.repo : 'mym-datos';
+    $('#syToken').value = cfg ? cfg.token : ''; $('#syPass').value = cfg ? cfg.pass : '';
+    $('#syConnect').textContent = cfg ? 'Guardar cambios' : 'Conectar';
+    $('#syNow').hidden = !cfg; $('#syOff').hidden = !cfg;
+    if (!cfg) setStatus('off', '');
+  }
+  function init(){
+    if (!enApp){ $('#syncWebOnly').hidden = false; $('#syConnect').disabled = true; return; }
+    showCfg();
+    $('#syncForm').addEventListener('submit', e => {
+      e.preventDefault();
+      const c = {user: $('#syUser').value.trim(), repo: $('#syRepo').value.trim() || 'mym-datos', token: $('#syToken').value.trim(), pass: $('#syPass').value};
+      if (!c.user || !c.token){ setStatus('err', 'Falta el usuario de GitHub o el permiso.'); $('#syncMsg').className = 'note err'; return; }
+      if (c.pass.length < 8){ $('#syncMsg').textContent = 'La contraseña de cifrado debe tener al menos 8 caracteres.'; $('#syncMsg').className = 'note err'; return; }
+      cfg = c; store.set('mym-sync', cfg); showCfg(); run();
+    });
+    $('#syNow').addEventListener('click', run);
+    $('#syncChip').addEventListener('click', run);
+    $('#syOff').addEventListener('click', () => { cfg = null; try { localStorage.removeItem('mym-sync'); } catch(e){} showCfg(); $('#syncChip').hidden = true; $('#syncMsg').textContent = 'Este dispositivo ya no se sincroniza. Tus datos siguen guardados aquí.'; });
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') schedule(300); });
+    window.addEventListener('online', () => schedule(500));
+    if (cfg){ setStatus('busy', 'Sincronizando…'); schedule(200); }
+  }
+  return {init, schedule};
+})();
+scheduleSync = () => Sync.schedule();
+
 fillForm(perfil);
 resetGForm(); resetWForm();
 renderAll();
+Sync.init();
 const lastTab = store.get('mym-tab'); if (lastTab && $('#p-'+lastTab)) showTab(lastTab);
 </script>
 </body>
