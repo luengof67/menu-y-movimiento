@@ -431,7 +431,7 @@ table.log td.v{font-family:var(--f-num);font-variant-numeric:tabular-nums;white-
     <h2>Recordatorios</h2>
     <p class="note" id="avNota">El móvil te avisará a la hora que elijas, aunque la app esté cerrada.</p>
     <div class="card"><div id="avLista"></div></div>
-    <div class="row"><button class="btn" type="button" id="avGuardar">Guardar recordatorios</button><span class="note" id="avMsg"></span></div>
+    <div class="row"><button class="btn" type="button" id="avGuardar">Guardar recordatorios</button><button class="btn ghost" type="button" id="avProbar">Probar aviso</button><span class="note" id="avMsg"></span></div>
   </section>
 
   <section class="panel" id="p-perfil" hidden>
@@ -1175,7 +1175,10 @@ document.addEventListener('click', e => {
 
 /* ---------- Imprimir ---------- */
 const enApp = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) || ['localhost','127.0.0.1'].includes(location.hostname);
-const Impresora = window.Capacitor && window.Capacitor.registerPlugin ? window.Capacitor.registerPlugin('Imprimir') : null;
+/* Funciones nativas de Android a través del puente de Capacitor */
+const puente = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform() && window.Capacitor.nativePromise);
+const nativo = (plugin, metodo, opts = {}) => window.Capacitor.nativePromise(plugin, metodo, opts);
+const Impresora = puente ? {print: o => nativo('Imprimir', 'print', o)} : null;
 document.querySelectorAll('.print-btn').forEach(b => {
   if (!enApp){ b.title = 'Para imprimir, usa la app de Windows o Android'; }
   b.addEventListener('click', () => {
@@ -1184,7 +1187,7 @@ document.querySelectorAll('.print-btn').forEach(b => {
     $('#printHead').innerHTML = `<strong>${titulo}</strong> · Menú y Movimiento · ${d.toLocaleDateString('es-ES', {day:'numeric', month:'long', year:'numeric'})}`;
     if (!enApp){ showPrintMsg(b); return; }
     try {
-      if (Impresora && window.Capacitor.isNativePlatform()) Impresora.print({title: titulo + ' - Menú y Movimiento'});
+      if (Impresora) Impresora.print({title: titulo + ' - Menú y Movimiento'}).catch(() => window.print());
       else window.print();
     } catch(err){ window.print(); }
   });
@@ -1295,22 +1298,38 @@ const AVISOS = [
   {id: 105, k: 'ejercicio', titulo: 'Rutina de ejercicio', cuerpo: 'Mira en la app qué ejercicio toca hoy.', h: '18:00', on: false},
   {id: 106, k: 'peso', titulo: 'Pesarte (lunes)', cuerpo: 'Por la mañana, en ayunas y después de ir al baño. Apúntalo en la app.', h: '08:15', on: true, semanal: true}
 ];
-const esAndroid = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
-const Notis = esAndroid && window.Capacitor.registerPlugin ? window.Capacitor.registerPlugin('LocalNotifications') : null;
+const Notis = puente ? {
+  checkPermissions: () => nativo('LocalNotifications', 'checkPermissions'),
+  requestPermissions: () => nativo('LocalNotifications', 'requestPermissions'),
+  cancel: o => nativo('LocalNotifications', 'cancel', o),
+  schedule: o => nativo('LocalNotifications', 'schedule', o)
+} : null;
 function avisosCfg(){ const c = store.get('mym-avisos') || {}; return AVISOS.map(a => ({...a, ...(c[a.k] || {})})); }
 function renderAvisos(){
   $('#tab-avisos').hidden = !Notis; $('#masAvisos').hidden = !Notis;
   $('#avLista').innerHTML = avisosCfg().map(a => `<label class="aviso" for="av-${a.k}"><input type="checkbox" id="av-${a.k}" data-k="${a.k}" ${a.on ? 'checked' : ''}><strong>${a.titulo}</strong><input type="time" id="avh-${a.k}" data-k="${a.k}" value="${a.h}" aria-label="Hora de ${a.titulo}"><span class="sub">${a.cuerpo}</span></label>`).join('');
 }
+async function permisoAvisos(){
+  let perm = await Notis.checkPermissions();
+  if (perm.display !== 'granted') perm = await Notis.requestPermissions();
+  if (perm.display !== 'granted'){ $('#avMsg').textContent = 'Sin permiso para avisarte. Actívalo en Ajustes del móvil → Aplicaciones → Menú y Movimiento → Notificaciones.'; return false; }
+  return true;
+}
+$('#avProbar').addEventListener('click', async () => {
+  if (!Notis){ $('#avMsg').textContent = 'Los recordatorios funcionan en la app de Android.'; return; }
+  try {
+    if (!await permisoAvisos()) return;
+    await Notis.schedule({notifications: [{id: 199, title: 'Prueba de Menú y Movimiento', body: 'Si ves este aviso, los recordatorios funcionan.', schedule: {at: new Date(Date.now() + 60000).toISOString(), allowWhileIdle: true}}]});
+    $('#avMsg').textContent = 'Te llegará un aviso de prueba en 1 minuto. Puedes cerrar la app.';
+  } catch(err){ $('#avMsg').textContent = 'No se pudo programar la prueba (' + (err.message || err) + ').'; }
+});
 $('#avGuardar').addEventListener('click', async () => {
   const cfg = {};
   AVISOS.forEach(a => cfg[a.k] = {on: $('#av-' + a.k).checked, h: $('#avh-' + a.k).value || a.h});
   store.set('mym-avisos', cfg);
   if (!Notis){ $('#avMsg').textContent = 'Los recordatorios funcionan en la app de Android.'; return; }
   try {
-    let perm = await Notis.checkPermissions();
-    if (perm.display !== 'granted') perm = await Notis.requestPermissions();
-    if (perm.display !== 'granted'){ $('#avMsg').textContent = 'Sin permiso para avisarte. Actívalo en Ajustes del móvil → Aplicaciones → Menú y Movimiento → Notificaciones.'; return; }
+    if (!await permisoAvisos()) return;
     await Notis.cancel({notifications: AVISOS.map(a => ({id: a.id}))});
     const lista = avisosCfg().filter(a => a.on).map(a => {
       const [hh, mm] = a.h.split(':').map(Number);
