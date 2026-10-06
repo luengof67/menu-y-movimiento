@@ -311,6 +311,10 @@ table.log td.v{font-family:var(--f-num);font-variant-numeric:tabular-nums;white-
       <fieldset>
         <legend>Tus gustos</legend>
         <div class="group"><span>Forma de comer</span><div class="chips" id="c-dieta"></div></div>
+        <div class="fields"><label class="field">Carne o pescado<select id="proteina">
+          <option value="carne">Más carne (pescado 1–2 veces por semana)</option>
+          <option value="equilibrado">Equilibrado (pescado 3–4 veces)</option>
+          <option value="pescado">Más pescado</option></select></label></div>
         <div class="group"><span>Me encanta (aparecerá más a menudo)</span><div class="chips" id="c-gustos"></div></div>
         <div class="group"><span>No quiero o no puedo comer</span><div class="chips" id="c-evitar"></div></div>
       </fieldset>
@@ -371,7 +375,7 @@ const store = {
 /* ---------- Opciones ---------- */
 const MEDS = [['metformina','Metformina'],['insulina','Insulina'],['sulfonilurea','Gliclazida / glimepirida'],['isglt2','Dapagliflozina / empagliflozina'],['glp1','Semaglutida u otro inyectable GLP-1'],['ninguna','Ninguna']];
 const DIETAS = [['sinverdura','Sin verduras (solo lechuga)'],['vegetariano','Vegetariano'],['vegano','Vegano'],['singluten','Sin gluten'],['sinlactosa','Sin lactosa']];
-const TAGS = [['pescado','Pescado'],['marisco','Marisco'],['carne','Ternera'],['cerdo','Cerdo'],['aves','Pollo y pavo'],['huevo','Huevo'],['lacteo','Lácteos'],['legumbres','Legumbres'],['frutossecos','Frutos secos'],['setas','Setas'],['soja','Tofu y soja'],['gluten','Pan y pasta']];
+const TAGS = [['pescado','Pescado'],['marisco','Marisco'],['carne','Ternera'],['cerdo','Cerdo'],['aves','Pollo y pavo'],['huevo','Huevo'],['lacteo','Lácteos'],['legumbres','Legumbres'],['frutossecos','Frutos secos'],['setas','Setas'],['soja','Tofu y soja'],['gluten','Pan y pasta'],['fruta','Fruta']];
 const EQUIPO = [['silla','Silla'],['esterilla','Esterilla'],['mancuernas','Mancuernas'],['gomas','Gomas elásticas'],['escalon','Escalón o escalera']];
 const LIMITES = [['rodillas','Rodillas'],['espalda','Espalda'],['hombros','Hombros']];
 
@@ -457,16 +461,44 @@ const R = [
  {id:'n24',m:'n',n:'Pavo a la plancha con patata cocida',hc:22,k:360,t:['aves'],i:['pechuga de pavo','patatas']},
  {id:'n25',m:'n',n:'Hummus con tortitas de maíz y huevo duro',hc:26,k:350,t:['legumbres','huevo'],i:['hummus','tortitas de maíz','huevos']},
 ];
+// más carne
+R.push(
+ {id:'c27',m:'c',n:'Pollo empanado al horno con patatas asadas',hc:40,k:520,t:['aves','gluten','huevo'],i:['pechuga de pollo','pan rallado','huevos','patatas']},
+ {id:'c28',m:'c',n:'Costillas de cerdo al horno con patata asada',hc:28,k:560,t:['cerdo'],i:['costillas de cerdo','patatas','ajo']},
+ {id:'c29',m:'c',n:'Albóndigas de ternera en salsa de almendras con arroz integral',hc:40,k:540,t:['carne','frutossecos','huevo','gluten'],i:['carne picada de ternera','huevos','pan rallado','almendras','arroz integral']},
+ {id:'c30',m:'c',n:'Muslos de pollo asados con patata y ensalada de lechuga',hc:30,k:520,t:['aves'],i:['muslos de pollo','patatas','lechuga']},
+ {id:'c31',m:'c',n:'Lentejas estofadas con ternera',hc:45,k:500,t:['legumbres','carne'],i:['lentejas','ternera para guisar','ajo','pimentón']},
+ {id:'c32',m:'c',n:'Solomillo de cerdo a la plancha con arroz integral',hc:40,k:520,t:['cerdo'],i:['solomillo de cerdo','arroz integral']},
+ {id:'c33',m:'c',n:'Escalope de ternera con puré de patata',hc:30,k:480,t:['carne','lacteo'],i:['filete de ternera','patatas','leche']},
+ {id:'c34',m:'c',n:'Pollo al ajillo con patatas panaderas',hc:30,k:500,t:['aves'],i:['muslos de pollo','patatas','ajo']},
+ {id:'c35',m:'c',n:'Cocido de garbanzos con carne',hc:45,k:560,t:['legumbres','carne','aves'],i:['garbanzos cocidos','ternera para guisar','muslos de pollo']},
+ {id:'n26',m:'n',n:'Hamburguesa de ternera a la plancha con ensalada de lechuga',hc:4,k:380,t:['carne'],i:['hamburguesas de ternera','lechuga']},
+ {id:'n27',m:'n',n:'Pinchitos de pollo con pan de pita integral',hc:25,k:380,t:['aves','gluten'],i:['pechuga de pollo','pan de pita integral']},
+ {id:'n28',m:'n',n:'Lomo de cerdo a la plancha con huevo a la plancha',hc:2,k:420,t:['cerdo','huevo'],i:['lomo de cerdo','huevos']},
+ {id:'n29',m:'n',n:'Pechuga de pavo empanada con ensalada de lechuga',hc:14,k:360,t:['aves','gluten','huevo'],i:['pechuga de pavo','pan rallado','huevos','lechuga']},
+ {id:'n30',m:'n',n:'Revuelto de jamón con pan integral',hc:18,k:380,t:['cerdo','huevo','gluten'],i:['huevos','jamón serrano','pan integral']},
+ {id:'n31',m:'n',n:'Tortilla de jamón cocido con ensalada de lechuga',hc:4,k:340,t:['cerdo','huevo'],i:['huevos','jamón cocido','lechuga']},
+ {id:'n32',m:'n',n:'Solomillo de ternera a la plancha con patata cocida',hc:20,k:420,t:['carne'],i:['solomillo de ternera','patatas']},
+ {id:'n33',m:'n',n:'Sándwich integral de pollo y queso',hc:30,k:400,t:['aves','lacteo','gluten'],i:['pan integral','pechuga de pollo','queso tierno']}
+);
+/* Marca automáticamente los platos que llevan fruta */
+const FRUTAS = ['frutos rojos','manzanas','peras','mandarinas','kiwis','fruta de temporada'];
+R.forEach(r => { if (r.i.some(x => FRUTAS.includes(x))) r.t.push('fruta'); });
 /* Marca automáticamente los platos que llevan verdura (la lechuga no cuenta) */
 const VERDURAS = ['tomate','tomates cherry','tomate triturado','espinacas','zanahorias','cebolla','pimiento','espárragos verdes','calabacín','berenjena','judías verdes','alcachofas','brócoli','calabaza','pepino','champiñones','setas variadas','puerro','apio'];
 R.forEach(r => { if (r.i.some(x => VERDURAS.includes(x))) r.t.push('verdura'); });
 /* Fruta de postre para completar los hidratos si el plato se queda corto */
-const POSTRE = {n:'1 pieza de fruta de postre (manzana, pera o naranja)', hc:15, k:70, i:'fruta de temporada'};
+const POSTRES = {
+  fruta: {n:'1 pieza de fruta de postre (manzana, pera o naranja)', hc:15, k:70, i:'fruta de temporada'},
+  pan:   {n:'1 rebanada de pan integral (40 g)', hc:16, k:100, i:'pan integral'},
+  maiz:  {n:'2 tortitas de maíz', hc:14, k:70, i:'tortitas de maíz'}
+};
+const postreDe = p => { const ex = excluded(p); return !ex.has('fruta') ? POSTRES.fruta : !ex.has('gluten') ? POSTRES.pan : POSTRES.maiz; };
 const SECCION = {
  'Verdura y fruta':['tomate','tomates cherry','espinacas','frutos rojos','aguacate','manzanas','kiwis','fruta de temporada','zanahorias','peras','mandarinas','cebolla','pimiento','patatas','lechuga','espárragos verdes','calabacín','berenjena','judías verdes','alcachofas','boniato','brócoli','calabaza','pepino','champiñones','setas variadas','puerro','apio','ajo','perejil'],
- 'Pescado y carne':['merluza','salmón','almejas','bacalao','sardinas','lubina','gambas','caballa','pechuga de pollo','pechuga de pavo','pechuga de pavo en lonchas','ternera en tiras','lomo de cerdo','carne picada de pollo','carne picada de ternera','filete de ternera','muslos de pollo','jamón serrano'],
+ 'Pescado y carne':['merluza','salmón','almejas','bacalao','sardinas','lubina','gambas','caballa','pechuga de pollo','pechuga de pavo','pechuga de pavo en lonchas','ternera en tiras','lomo de cerdo','carne picada de pollo','carne picada de ternera','filete de ternera','muslos de pollo','jamón serrano','jamón cocido','costillas de cerdo','ternera para guisar','solomillo de cerdo','solomillo de ternera','hamburguesas de ternera'],
  'Huevos y lácteos':['huevos','leche','yogur natural sin azúcar','yogur griego natural','queso fresco','queso tierno','queso feta','queso rallado','tofu','edamame','bebida de soja sin azúcar','bebida de almendra sin azúcar','hummus'],
- 'Despensa':['pan integral','pan de centeno','pan de semillas','tortitas de maíz','copos de avena','arroz integral','pasta integral','quinoa','lentejas','lentejas rojas','garbanzos cocidos','alubias blancas cocidas','atún en conserva','tomate triturado','nueces','almendras','pistachos','aceite de oliva virgen extra','canela','pimentón','comino','orégano','salsa de soja baja en sal']
+ 'Despensa':['pan integral','pan de centeno','pan de semillas','tortitas de maíz','pan de pita integral','pan rallado','copos de avena','arroz integral','pasta integral','quinoa','lentejas','lentejas rojas','garbanzos cocidos','alubias blancas cocidas','atún en conserva','tomate triturado','nueces','almendras','pistachos','aceite de oliva virgen extra','canela','pimentón','comino','orégano','salsa de soja baja en sal']
 };
 const secOf = x => Object.keys(SECCION).find(s => SECCION[s].includes(x)) || 'Despensa';
 
@@ -500,7 +532,7 @@ const MOV = 'Movilidad 3 min: círculos de hombros, giros de cadera y gato-vaca.
 const STRETCH = 'Al terminar: estira gemelos, isquiotibiales y pecho, 30 s cada uno.';
 
 /* ---------- Perfil ---------- */
-const SAMPLE = {ejemplo:true,edad:58,sexo:'h',altura:172,peso:86,actividad:'ligera',objetivo:'perder',tipo:'2',comidas:'5',meds:['metformina'],dieta:['sinverdura'],gustos:['pescado'],evitar:[],nivel:'1',minutos:'25',equipo:['silla','esterilla'],limites:['rodillas']};
+const SAMPLE = {ejemplo:true,edad:58,sexo:'h',altura:172,peso:86,actividad:'ligera',objetivo:'perder',tipo:'2',comidas:'5',meds:['metformina'],dieta:['sinverdura'],proteina:'equilibrado',gustos:[],evitar:[],nivel:'1',minutos:'25',equipo:['silla','esterilla'],limites:['rodillas']};
 
 function chips(el, list, name, cls){
   $(el).innerHTML = list.map(([v,l]) => `<label class="chip ${cls||''}"><input type="checkbox" id="${name}-${v}" name="${name}" value="${v}"><span>${l}</span></label>`).join('');
@@ -508,10 +540,10 @@ function chips(el, list, name, cls){
 chips('#c-meds',MEDS,'meds'); chips('#c-dieta',DIETAS,'dieta'); chips('#c-gustos',TAGS,'gustos'); chips('#c-evitar',TAGS,'evitar','no');
 chips('#c-equipo',EQUIPO,'equipo'); chips('#c-limites',LIMITES,'limites','no');
 
-const SIMPLE = ['edad','sexo','altura','peso','actividad','objetivo','tipo','comidas','nivel','minutos'];
+const SIMPLE = ['edad','sexo','altura','peso','actividad','objetivo','tipo','comidas','proteina','nivel','minutos'];
 const MULTI = ['meds','dieta','gustos','evitar','equipo','limites'];
 function fillForm(p){
-  SIMPLE.forEach(k => $('#'+k).value = p[k]);
+  SIMPLE.forEach(k => $('#'+k).value = p[k] ?? (k === 'proteina' ? 'equilibrado' : ''));
   MULTI.forEach(k => document.querySelectorAll(`input[name="${k}"]`).forEach(i => i.checked = (p[k]||[]).includes(i.value)));
 }
 function readForm(){
@@ -558,16 +590,31 @@ function candidates(p, slot){
   fallbackSlots.add(slot);
   return R.filter(r => r.m===slot);
 }
-function weightedOrder(list, gustos){
-  return list.map(r => ({r, w: Math.random() * (r.t.some(t => gustos.includes(t)) ? 3 : 1)}))
-             .sort((a,b) => b.w - a.w).map(x => x.r);
+const PEZ = ['pescado','marisco'], CARNE = ['carne','cerdo','aves'];
+function peso(r, p){
+  let w = r.t.some(t => p.gustos.includes(t)) ? 3 : 1;
+  const pref = p.proteina || 'equilibrado';
+  const pez = r.t.some(t => PEZ.includes(t)), carne = r.t.some(t => CARNE.includes(t));
+  if (pref === 'carne'){ if (carne) w *= 2; if (pez) w *= 0.8; }
+  if (pref === 'pescado'){ if (pez) w *= 3; }
+  return w;
 }
+function weightedOrder(list, p){
+  return list.map(r => ({r, w: Math.random() * peso(r, p)})).sort((a,b) => b.w - a.w).map(x => x.r);
+}
+const MAX_PEZ = {carne: 2, equilibrado: 4, pescado: 99};
 function makeWeek(p){
   fallbackSlots = new Set();
-  const pools = {}, used = {};
+  const pools = {}, cap = MAX_PEZ[p.proteina || 'equilibrado'];
+  let pez = 0;
   const take = slot => {
-    if (!pools[slot] || !pools[slot].length) pools[slot] = weightedOrder(candidates(p, slot), p.gustos);
-    return pools[slot].shift().id;
+    if (!pools[slot] || !pools[slot].length) pools[slot] = weightedOrder(candidates(p, slot), p);
+    const isPez = r => (slot === 'c' || slot === 'n') && r.t.some(t => PEZ.includes(t));
+    let k = pools[slot].findIndex(r => !isPez(r) || pez < cap);
+    if (k < 0) k = 0;
+    const r = pools[slot].splice(k, 1)[0];
+    if (isPez(r)) pez++;
+    return r.id;
   };
   return DIAS.map(() => SLOTS[p.comidas].map(([s]) => take(s)));
 }
@@ -581,7 +628,7 @@ function mealInfo(d, si){
   const c = calc(perfil), [slot, label, pct] = SLOTS[perfil.comidas][si];
   const r = byId(semana[d][si]), target = c.kcal*pct, f = portion(r, target, slot);
   let hc = Math.round(r.hc*f), k = Math.round(r.k*f/10)*10, postre = false;
-  if ((slot==='c' || slot==='n') && hc < c.hc*pct*0.6) { postre = true; hc += POSTRE.hc; k += POSTRE.k; }
+  if ((slot==='c' || slot==='n') && hc < c.hc*pct*0.6) { postre = postreDe(perfil); hc += postre.hc; k += postre.k; }
   return {r, f, hc, k, postre, slot, label, pct, c};
 }
 const fmt = n => String(n).replace('.', ',');
@@ -620,7 +667,7 @@ function renderMenu(){
       const rac = Math.round(m.hc/10*2)/2;
       return `<div class="meal">
         <span class="slot">${m.label} · objetivo ${Math.round(m.c.hc*m.pct)} g HC</span>
-        <span class="name">${r.n}${m.postre ? `<br><span class="meta">+ ${POSTRE.n}</span>` : ''}</span><span class="hc" title="hidratos de carbono">${m.hc} g HC</span>
+        <span class="name">${r.n}${m.postre ? `<br><span class="meta">+ ${m.postre.n}</span>` : ''}</span><span class="hc" title="hidratos de carbono">${m.hc} g HC</span>
         <span class="meta">${m.f!==1 ? 'Ración ×'+fmt(m.f)+' · ' : ''}${fmt(rac)} rac. · ~${m.k} kcal</span>
         <button class="swap" type="button" data-d="${di}" data-s="${si}">Cambiar plato</button>
       </div>`;
@@ -631,7 +678,7 @@ function renderMenu(){
   let note = ex.length ? `Sin ${ex.join(', ')}. ` : '';
   if (perfil.gustos.length) note += `Más a menudo: ${perfil.gustos.map(t => TAGS.find(x => x[0]===t)[1].toLowerCase()).join(', ')}. `;
   if (fallbackSlots.size) note += 'Con tus exclusiones quedaban pocos platos en algún momento del día; revisa las marcas en «Mi perfil». ';
-  if (perfil.dieta.includes('sinverdura')) note = 'Sin verduras: solo ensalada de lechuga como guarnición. La fibra que te falta viene de legumbres, cereales integrales y fruta; procura tomarlos cada día porque ayudan a que la glucosa suba más despacio. ' + note;
+  if (perfil.dieta.includes('sinverdura')) note = `Sin verduras: solo ensalada de lechuga como guarnición. La fibra que te falta viene de legumbres y cereales integrales${excluded(perfil).has('fruta') ? '' : ', y también de la fruta'}; procura tomarlos cada día porque ayudan a que la glucosa suba más despacio. ` + note;
   if (perfil.meds.includes('isglt2')) note += 'Tomas un iSGLT2: no bajes mucho los hidratos por tu cuenta sin hablarlo con tu médico. ';
   $('#menuNote').textContent = note + 'Bebe agua; evita zumos y refrescos con azúcar.';
 }
@@ -641,7 +688,7 @@ function buildShop(){
   semana.forEach((day, d) => day.forEach((id, si) => {
     const m = mealInfo(d, si);
     m.r.i.forEach(x => count[x] = (count[x]||0)+1);
-    if (m.postre) count[POSTRE.i] = (count[POSTRE.i]||0)+1;
+    if (m.postre) count[m.postre.i] = (count[m.postre.i]||0)+1;
   }));
   const groups = {};
   Object.keys(count).sort((a,b) => a.localeCompare(b,'es')).forEach(x => (groups[secOf(x)] = groups[secOf(x)] || []).push(x));
@@ -895,7 +942,7 @@ $('#days').addEventListener('click', e => {
   const today = semana[d];
   const opts = candidates(perfil, slot).filter(r => !today.includes(r.id));
   if (!opts.length) return;
-  semana[d][s] = weightedOrder(opts, perfil.gustos)[0].id;
+  semana[d][s] = weightedOrder(opts, perfil)[0].id;
   store.set('mym-semana', semana); touch('semana'); renderMenu(); renderShop();
 });
 $('#shop').addEventListener('change', e => {
