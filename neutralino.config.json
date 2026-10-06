@@ -1,0 +1,28 @@
+{
+  "applicationId": "es.menuymovimiento.app",
+  "version": "1.1.0",
+  "defaultMode": "window",
+  "port": 51783,
+  "documentRoot": "/www/",
+  "url": "/",
+  "enableServer": true,
+  "enableNativeAPI": false,
+  "tokenSecurity": "one-time",
+  "logging": { "enabled": false, "writeToLogFile": false },
+  "nativeAllowList": [],
+  "modes": {
+    "window": {
+      "title": "Menú y Movimiento",
+      "width": 1200, "height": 860, "minWidth": 380, "minHeight": 500,
+      "center": true, "icon": "/www/icon.png",
+      "enableInspector": false, "resizable": true, "exitProcessOnClose": true
+    }
+  },
+  "cli": {
+    "binaryName": "MenuYMovimiento",
+    "resourcesPath": "/www/",
+    "extensionsPath": "/extensions/",
+    "binaryVersion": "6.4.0",
+    "clientVersion": "6.4.0"
+  }
+}

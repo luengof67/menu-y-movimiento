@@ -1,0 +1,6 @@
+{
+  "appId": "es.menuymovimiento.app",
+  "appName": "Menú y Movimiento",
+  "webDir": "www",
+  "android": { "backgroundColor": "#EFF4F3" }
+}

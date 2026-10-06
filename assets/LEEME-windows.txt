@@ -1,0 +1,9 @@
+MENÚ Y MOVIMIENTO PARA WINDOWS
+
+1. Descomprime este ZIP (clic derecho > Extraer todo). Puedes mover la carpeta donde quieras, por ejemplo a Documentos.
+2. Haz doble clic en "Menu y Movimiento.exe".
+3. La primera vez Windows puede mostrar "Windows protegió su PC", porque la app no está firmada por una empresa. Pulsa "Más información" y luego "Ejecutar de todas formas".
+4. Para tenerla a mano: clic derecho sobre el .exe > "Anclar a Inicio" o "Enviar a > Escritorio (crear acceso directo)".
+
+Funciona sin internet y guarda tu perfil en este ordenador.
+Necesita Windows 10 u 11 actualizado (usa el componente WebView2 que Windows ya trae). Si no se abre, instala "Microsoft Edge WebView2 Runtime" desde la web de Microsoft.
