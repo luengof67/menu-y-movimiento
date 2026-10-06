@@ -140,6 +140,13 @@ table.log td.v{font-family:var(--f-num);font-variant-numeric:tabular-nums;white-
 .hypo{background:var(--warn-soft);border:1px solid var(--warn);border-radius:12px;padding:12px 16px}
 .print-only{display:none}
 .print-note{font-size:.85rem;color:var(--muted)}
+/* Objetivo de peso */
+.goalbox{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:grid;gap:10px}
+.goalbar{position:relative;height:14px;border-radius:999px;background:var(--accent-soft);overflow:hidden}
+.goalbar span{position:absolute;inset:0 auto 0 0;background:var(--accent);border-radius:999px}
+.goalends{display:flex;justify-content:space-between;font-family:var(--f-num);font-size:.82rem;color:var(--muted)}
+.goalbox p{max-width:70ch}
+.hint{font-size:.82rem;color:var(--muted)}
 /* Sincronización */
 .sync-chip{justify-self:start;display:inline-flex;align-items:center;gap:8px;font:inherit;font-size:.85rem;color:var(--muted);background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:4px 12px;cursor:pointer}
 .sync-chip .dot{width:8px;height:8px;border-radius:50%;background:var(--muted)}
@@ -262,9 +269,9 @@ table.log td.v{font-family:var(--f-num);font-variant-numeric:tabular-nums;white-
       <label class="field">Fecha<input id="wFecha" type="date" required></label>
       <label class="field">Peso (kg)<input id="wPeso" type="number" min="30" max="300" step="0.1" inputmode="decimal" required placeholder="ej. 85,4"></label>
       <label class="field">Cintura (cm)<input id="wCintura" type="number" min="40" max="200" step="0.5" inputmode="decimal" placeholder="opcional"></label>
-      <label class="field">Peso objetivo (kg)<input id="wObjetivo" type="number" min="30" max="300" step="0.5" inputmode="decimal" placeholder="opcional"></label>
       <button class="btn" type="submit">Añadir</button>
     </form>
+    <div class="goalbox" id="wGoal"></div>
     <div class="stats" id="wStats"></div>
     <div class="chartbox">
       <h3>Evolución</h3>
@@ -294,7 +301,13 @@ table.log td.v{font-family:var(--f-num);font-variant-numeric:tabular-nums;white-
             <option value="perder">Perder peso</option>
             <option value="mantener">Mantener peso</option>
             <option value="musculo">Ganar fuerza y músculo</option></select></label>
+          <label class="field">Peso objetivo (kg)<input id="pesoObjetivo" type="number" min="35" max="250" step="0.5" inputmode="decimal" placeholder="opcional"></label>
+          <label class="field">Ritmo para bajar<select id="ritmo">
+            <option value="0.25">Suave (¼ kg por semana)</option>
+            <option value="0.5">Recomendado (½ kg por semana)</option>
+            <option value="0.75">Rápido (¾ kg por semana)</option></select></label>
         </div>
+        <p class="hint" id="pesoRef"></p>
       </fieldset>
 
       <fieldset>
@@ -540,16 +553,18 @@ function chips(el, list, name, cls){
 chips('#c-meds',MEDS,'meds'); chips('#c-dieta',DIETAS,'dieta'); chips('#c-gustos',TAGS,'gustos'); chips('#c-evitar',TAGS,'evitar','no');
 chips('#c-equipo',EQUIPO,'equipo'); chips('#c-limites',LIMITES,'limites','no');
 
-const SIMPLE = ['edad','sexo','altura','peso','actividad','objetivo','tipo','comidas','proteina','nivel','minutos'];
+const SIMPLE = ['edad','sexo','altura','peso','actividad','objetivo','pesoObjetivo','ritmo','tipo','comidas','proteina','nivel','minutos'];
 const MULTI = ['meds','dieta','gustos','evitar','equipo','limites'];
 function fillForm(p){
-  SIMPLE.forEach(k => $('#'+k).value = p[k] ?? (k === 'proteina' ? 'equilibrado' : ''));
+  SIMPLE.forEach(k => $('#'+k).value = p[k] ?? ({proteina:'equilibrado', ritmo:'0.5'}[k] || ''));
+  pesoRef();
   MULTI.forEach(k => document.querySelectorAll(`input[name="${k}"]`).forEach(i => i.checked = (p[k]||[]).includes(i.value)));
 }
 function readForm(){
   const p = {};
   SIMPLE.forEach(k => p[k] = $('#'+k).value);
   ['edad','altura','peso'].forEach(k => p[k] = parseFloat(p[k]));
+  p.pesoObjetivo = parseFloat(String(p.pesoObjetivo).replace(',', '.')) || null;
   MULTI.forEach(k => p[k] = [...document.querySelectorAll(`input[name="${k}"]:checked`)].map(i => i.value));
   return p;
 }
@@ -559,7 +574,8 @@ const ACT = {sedentaria:1.2, ligera:1.375, moderada:1.55, alta:1.725};
 function calc(p){
   const bmr = 10*p.peso + 6.25*p.altura - 5*p.edad + (p.sexo==='h' ? 5 : -161);
   const tdee = bmr * ACT[p.actividad];
-  let k = tdee + (p.objetivo==='perder' ? -500 : p.objetivo==='musculo' ? 250 : 0);
+  const deficit = Math.round((+p.ritmo || 0.5) * 7700 / 7);   // 1 kg de grasa ≈ 7700 kcal
+  let k = tdee + (p.objetivo==='perder' ? -deficit : p.objetivo==='musculo' ? 250 : 0);
   k = Math.max(k, p.sexo==='h' ? 1500 : 1200);
   k = Math.round(k/50)*50;
   const hc = Math.round(k*0.45/4);
@@ -649,7 +665,7 @@ if (!validWeek(semana)) { semana = makeWeek(perfil); store.set('mym-semana', sem
 function renderStats(){
   const c = calc(perfil);
   const imcTxt = c.imc < 18.5 ? 'bajo peso' : c.imc < 25 ? 'peso normal' : c.imc < 30 ? 'sobrepeso' : 'obesidad';
-  const obj = {perder:'para perder peso', mantener:'para mantener', musculo:'para ganar músculo'}[perfil.objetivo];
+  const obj = {perder:`para bajar ${fmt(+perfil.ritmo || 0.5)} kg/semana`, mantener:'para mantener', musculo:'para ganar músculo'}[perfil.objetivo];
   $('#stats').innerHTML = `
     <div class="stat"><span class="lbl">Energía diaria</span><span class="val">${c.kcal.toLocaleString('es-ES')}</span><span class="sub">kcal ${obj}</span></div>
     <div class="stat carb"><span class="lbl">Hidratos al día</span><span class="val">${c.hc} g</span><span class="sub">unas ${c.rac} raciones de 10 g</span></div>
@@ -776,7 +792,7 @@ function gEstado(e){
 }
 $('#gMomento').innerHTML = MOMENTOS.map(m => `<option value="${m[0]}">${m[1]}</option>`).join('');
 function resetGForm(){ $('#gFecha').value = hoyISO(); $('#gHora').value = ahoraHM(); $('#gValor').value = ''; $('#gNota').value = ''; }
-function resetWForm(){ $('#wFecha').value = hoyISO(); $('#wPeso').value = ''; $('#wCintura').value = ''; $('#wObjetivo').value = perfil.pesoObjetivo || ''; }
+function resetWForm(){ $('#wFecha').value = hoyISO(); $('#wPeso').value = ''; $('#wCintura').value = ''; }
 
 /* Gráfica de línea simple: puntos [{t, v, cls, tip}] */
 function lineChart(el, pts, opt){
@@ -846,6 +862,51 @@ function renderGlucosa(){
   }</tbody></table>` : `<p class="empty-log">Tus mediciones aparecerán aquí, de la más reciente a la más antigua.</p>`;
 }
 
+function pesoRef(){
+  const h = parseFloat($('#altura').value) / 100, el = $('#pesoRef');
+  if (!el) return;
+  if (!h){ el.textContent = ''; return; }
+  const a = Math.round(18.5*h*h), b = Math.round(25*h*h);
+  el.textContent = `Referencia: con tu altura, un peso saludable (IMC 18,5–25) está entre ${a} y ${b} kg. Si te queda lejos, ponte una meta intermedia: perder un 5–10 % de tu peso ya mejora mucho la glucosa.`;
+}
+function tendencia(sorted){
+  // kg por semana en las últimas 8 semanas (recta de mínimos cuadrados)
+  const pts = sorted.filter(e => e.t >= Date.now() - 56*864e5);
+  if (pts.length < 3 || (pts[0].t - pts[pts.length-1].t) < 14*864e5) return null;
+  const n = pts.length, mx = pts.reduce((a,e) => a + e.t, 0)/n, my = pts.reduce((a,e) => a + e.p, 0)/n;
+  const num = pts.reduce((a,e) => a + (e.t-mx)*(e.p-my), 0), den = pts.reduce((a,e) => a + (e.t-mx)**2, 0);
+  return den ? num/den * 7*864e5 : null;
+}
+const fechaLarga = t => new Date(t).toLocaleDateString('es-ES', {day:'numeric', month:'long', year:'numeric'});
+function renderGoal(sorted){
+  const box = $('#wGoal'), meta = perfil.pesoObjetivo ? +perfil.pesoObjetivo : null;
+  if (!meta){ box.innerHTML = `<h3>Tu objetivo de peso</h3><p class="note">Todavía no tienes un peso objetivo. Ponlo en «Mi perfil», junto a tu peso, y aquí verás cuánto llevas y cuándo podrías llegar.</p>`; return; }
+  const actual = sorted.length ? sorted[0].p : perfil.peso;
+  const inicio = sorted.length ? sorted[sorted.length-1].p : perfil.peso;
+  const bajar = inicio > meta;
+  const total = Math.abs(inicio - meta), hecho = bajar ? inicio - actual : actual - inicio;
+  const pct = total > 0 ? Math.max(0, Math.min(100, Math.round(hecho / total * 100))) : 100;
+  const falta = Math.round(Math.abs(actual - meta)*10)/10;
+  const logrado = bajar ? actual <= meta : actual >= meta;
+  const ritmoPlan = +perfil.ritmo || 0.5, real = tendencia(sorted);
+  let texto;
+  if (logrado) texto = `<strong>¡Has llegado a tu objetivo!</strong> Enhorabuena. Para no recuperarlo, cambia tu objetivo a «Mantener peso» en tu perfil; el menú subirá un poco las calorías.`;
+  else {
+    const semanasPlan = falta / ritmoPlan;
+    texto = `Te faltan <strong>${fmt(falta)} kg</strong>. Al ritmo que has elegido (${fmt(ritmoPlan)} kg por semana) llegarías hacia el <strong>${fechaLarga(Date.now() + semanasPlan*7*864e5)}</strong>.`;
+    if (real != null){
+      const vaBien = bajar ? real < -0.05 : real > 0.05;
+      if (vaBien) texto += ` A tu ritmo real de las últimas semanas (${fmt(Math.abs(Math.round(real*100)/100))} kg por semana), hacia el ${fechaLarga(Date.now() + falta/Math.abs(real)*7*864e5)}.`;
+      else texto += ` En las últimas semanas tu peso no ha bajado: revisa las raciones y suma algún paseo más; si sigue igual un mes, coméntalo con tu médico.`;
+      if (bajar && real < -1.1) texto += ` Estás bajando más de 1 kg por semana: es mucho; si tomas insulina o gliclazida, vigila las bajadas de azúcar y consúltalo.`;
+    }
+    if (perfil.objetivo !== 'perder' && bajar) texto += ` Para que el menú te ayude a bajar, elige «Perder peso» como objetivo en tu perfil.`;
+  }
+  box.innerHTML = `<div class="row"><h3>Tu objetivo: ${fmt(meta)} kg</h3><span class="note num">${pct} % conseguido</span></div>
+    <div class="goalbar" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100" aria-label="Progreso hacia el objetivo"><span style="width:${pct}%"></span></div>
+    <div class="goalends"><span>Inicio ${fmt(inicio)} kg</span><span>Ahora ${fmt(actual)} kg</span><span>Meta ${fmt(meta)} kg</span></div>
+    <p class="note">${texto}</p>`;
+}
 function renderPeso(){
   const sorted = live(wLog).map(e => ({...e, t: ts(e.f)})).sort((a,b) => b.t - a.t);
   const last = sorted[0], first = sorted[sorted.length-1];
@@ -857,7 +918,8 @@ function renderPeso(){
     <div class="stat"><span class="lbl">Peso actual</span><span class="val">${last ? fmt(last.p) + ' kg' : '—'}</span><span class="sub">${last ? 'el ' + fechaCorta(last.f) : 'sin pesadas'}</span></div>
     <div class="stat"><span class="lbl">Desde el inicio</span><span class="val">${sorted.length > 1 ? diff(last, first) : '—'}</span><span class="sub">${first && sorted.length > 1 ? 'desde ' + fechaCorta(first.f) : 'necesitas 2 pesadas'}</span></div>
     <div class="stat"><span class="lbl">Últimas 4 semanas</span><span class="val">${sorted.length > 1 ? diff(last, near(28) || first) : '—'}</span><span class="sub">bajar 0,5–1 kg por semana es un buen ritmo</span></div>
-    <div class="stat"><span class="lbl">${objetivo ? 'Te faltan' : 'IMC'}</span><span class="val">${objetivo && last ? fmt(Math.max(0, Math.round((last.p - objetivo)*10)/10)) + ' kg' : imc ? fmt(imc.toFixed(1)) : '—'}</span><span class="sub">${objetivo ? 'para llegar a ' + fmt(objetivo) + ' kg' : 'pon un peso objetivo arriba'}</span></div>`;
+    <div class="stat"><span class="lbl">${objetivo ? 'Te faltan' : 'IMC'}</span><span class="val">${objetivo && last ? fmt(Math.max(0, Math.round((last.p - objetivo)*10)/10)) + ' kg' : imc ? fmt(imc.toFixed(1)) : '—'}</span><span class="sub">${objetivo ? 'para llegar a ' + fmt(objetivo) + ' kg' : 'pon un peso objetivo en tu perfil'}</span></div>`;
+  renderGoal(sorted);
   const pts = sorted.map(e => ({t:e.t, v:e.p, tip:`${fmt(e.p)} kg · ${fechaCorta(e.f)}`}));
   lineChart($('#wChart'), pts, {goal: objetivo, extra: objetivo ? [objetivo] : [], label:'Evolución del peso', empty:'Aún no hay pesadas. Añade la de hoy y aquí verás tu evolución semana a semana.'});
   $('#wTable').innerHTML = sorted.length ? `<table class="log"><thead><tr><th>Fecha</th><th>Peso</th><th>Cambio</th><th>Cintura</th><th></th></tr></thead><tbody>${
@@ -883,8 +945,6 @@ $('#gForm').addEventListener('submit', e => {
 $('#wForm').addEventListener('submit', e => {
   e.preventDefault();
   const p = parseFloat(String($('#wPeso').value).replace(',', '.'));
-  const obj = parseFloat(String($('#wObjetivo').value).replace(',', '.'));
-  if ((perfil.pesoObjetivo || null) !== (obj || null)){ perfil.pesoObjetivo = obj || null; store.set('mym-perfil', perfil); touch('perfil'); }
   if (p){
     const c = parseFloat(String($('#wCintura').value).replace(',', '.')) || null;
     const f = $('#wFecha').value, prev = wLog.find(x => x.f === f && !x.del);
@@ -956,12 +1016,12 @@ $('#copyList').addEventListener('click', () => {
   try { navigator.clipboard.writeText(txt).then(() => { $('#copyList').textContent = 'Copiada'; setTimeout(() => $('#copyList').textContent = 'Copiar lista', 1800); }, fb); } catch(err){ fb(); }
 });
 $('#regenEx').addEventListener('click', () => { exSeed = Math.floor(Math.random()*100000); store.set('mym-exseed', exSeed); touch('perfil'); renderExercise(); });
+$('#altura').addEventListener('input', pesoRef);
 $('#form').addEventListener('submit', e => {
   e.preventDefault();
   const p = readForm();
   if (p.meds.includes('ninguna') && p.meds.length > 1) p.meds = p.meds.filter(m => m!=='ninguna');
   const changedMeals = p.comidas !== perfil.comidas;
-  p.pesoObjetivo = perfil.pesoObjetivo || null;
   perfil = p; store.set('mym-perfil', perfil);
   semana = makeWeek(perfil); store.set('mym-semana', semana); store.set('mym-shopcheck', []); touch('perfil', 'semana');
   renderAll();
