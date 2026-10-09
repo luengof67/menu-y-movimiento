@@ -38,8 +38,18 @@ jobs:
           cp "dist/MenuYMovimiento/MenuYMovimiento-win_x64.exe" "out/MenuYMovimiento/Menu y Movimiento.exe"
           cp assets/LEEME-windows.txt out/MenuYMovimiento/LEEME.txt
           cd out && zip -r ../MenuYMovimiento-Windows.zip MenuYMovimiento
+      - name: Crear instalador
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq nsis
+          mkdir -p out/app
+          cp "dist/MenuYMovimiento/MenuYMovimiento-win_x64.exe" "out/app/Menu y Movimiento.exe"
+          cd assets && makensis -V2 -DVERSION=$(node -p "require('../package.json').version") instalador.nsi
       - uses: actions/upload-artifact@v4
-        with: { name: windows, path: MenuYMovimiento-Windows.zip }
+        with:
+          name: windows
+          path: |
+            MenuYMovimiento-Windows.zip
+            out/MenuYMovimiento-Instalador.exe
 
   publicar:
     needs: [android, windows]
@@ -51,7 +61,8 @@ jobs:
         with:
           tag_name: v${{ github.run_number }}
           name: Versión ${{ github.run_number }}
-          body: Descarga el APK para Android o el ZIP para Windows.
+          body: 'Windows: descarga y ejecuta MenuYMovimiento-Instalador.exe. Android: MenuYMovimiento.apk.'
           files: |
             android/MenuYMovimiento.apk
+            windows/out/MenuYMovimiento-Instalador.exe
             windows/MenuYMovimiento-Windows.zip

@@ -6,8 +6,9 @@ Menú semanal para personas con diabetes, con los hidratos de carbono contados e
 
 Ve a **Releases** (columna derecha de esta página) y descarga la última versión:
 
+- `MenuYMovimiento-Instalador.exe` para Windows 10/11 (recomendado)
 - `MenuYMovimiento.apk` para Android
-- `MenuYMovimiento-Windows.zip` para Windows 10/11
+- `MenuYMovimiento-Windows.zip`: versión portátil de Windows, sin instalar
 
 Cada vez que se sube un cambio a la rama `main`, GitHub compila las dos versiones solo y publica una versión nueva en Releases (tarda unos 5 minutos).
 
@@ -15,7 +16,7 @@ Cada vez que se sube un cambio a la rama `main`, GitHub compila las dos versione
 
 **Android:** abre el APK en el móvil y permite «instalar apps de origen desconocido» cuando lo pida.
 
-**Windows:** descomprime el ZIP y abre `Menu y Movimiento.exe`. Si aparece «Windows protegió su PC», pulsa «Más información» y «Ejecutar de todas formas».
+**Windows:** ejecuta `MenuYMovimiento-Instalador.exe`. Se instala para tu usuario (sin pedir administrador), crea accesos en el menú Inicio y el escritorio y aparece en «Aplicaciones instaladas». Para actualizar, ejecuta el instalador de la versión nueva. Si aparece «Windows protegió su PC», pulsa «Más información» y «Ejecutar de todas formas». Los datos se guardan en `%APPDATA%\Menu y Movimiento.exe` y se conservan al actualizar o desinstalar.
 
 ## Sincronizar móvil y ordenador
 
