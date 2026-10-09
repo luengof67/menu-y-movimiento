@@ -549,7 +549,7 @@ const store = {
 const MEDS = [['metformina','Metformina'],['insulina','Insulina'],['sulfonilurea','Gliclazida / glimepirida'],['isglt2','Dapagliflozina / empagliflozina'],['glp1','Semaglutida u otro inyectable GLP-1'],['ninguna','Ninguna']];
 const DIETAS = [['sinverdura','Sin verduras (solo lechuga)'],['vegetariano','Vegetariano'],['vegano','Vegano'],['singluten','Sin gluten'],['sinlactosa','Sin lactosa']];
 const TAGS = [['pescado','Pescado'],['marisco','Marisco'],['carne','Ternera'],['cerdo','Cerdo'],['aves','Pollo y pavo'],['huevo','Huevo'],['lacteo','Lácteos'],['legumbres','Legumbres'],['frutossecos','Frutos secos'],['setas','Setas'],['soja','Tofu y soja'],['gluten','Pan y pasta'],['fruta','Fruta']];
-const EQUIPO = [['silla','Silla'],['esterilla','Esterilla'],['mancuernas','Mancuernas'],['gomas','Gomas elásticas'],['escalon','Escalón o escalera']];
+const EQUIPO = [['silla','Silla'],['esterilla','Esterilla'],['mancuernas','Mancuernas'],['gomas','Gomas elásticas'],['escalon','Escalón o escalera'],['bici','Bicicleta estática']];
 const LIMITES = [['rodillas','Rodillas'],['espalda','Espalda'],['hombros','Hombros']];
 
 /* ---------- Platos (HC y kcal aproximados por ración estándar) ---------- */
@@ -905,11 +905,34 @@ function renderExercise(){
   const plan = {
     1:['F','P','F','P','F','P','D'],
     2:['F','C','F','P','F','C','D'],
-    3:['F','C','F','C','F','C','P']}[lvl];
+    3:['F','C','F','C','F','C','P']}[lvl].slice();
+  const bici = eq.has('bici');
+  if (bici){
+    // con bici: los días de cardio se hacen en la bici y, en nivel principiante, el jueves es bici suave
+    plan.forEach((t, i) => { if (t === 'C') plan[i] = 'B'; });
+    if (lvl === 1) plan[3] = 'B';
+  }
+  const bMin = Math.max(min, 20);
+  const BICI = {
+    1: {tipo: 'Bicicleta suave', lista: [
+      {n: 'Calentamiento', d: '5 min', how: 'Pedalea sin resistencia, a ritmo tranquilo.'},
+      {n: 'Ritmo cómodo', d: (bMin - 8) + ' min', how: 'Resistencia baja o media. Debes poder hablar con frases completas.'},
+      {n: 'Vuelta a la calma', d: '3 min', how: 'Baja la resistencia y pedalea despacio hasta recuperar el aliento.'}]},
+    2: {tipo: 'Bicicleta en intervalos', lista: [
+      {n: 'Calentamiento', d: '5 min', how: 'Pedalea suave, sube la resistencia poco a poco.'},
+      {n: 'Intervalos', d: Math.max(4, Math.floor((bMin - 9) / 3)) + ' × (1 min fuerte + 2 min suave)', how: 'En el minuto fuerte, sube la resistencia o la cadencia hasta que hablar cueste. Luego recupera pedaleando suave.'},
+      {n: 'Vuelta a la calma', d: '4 min', how: 'Resistencia mínima y ritmo lento.'}]},
+    3: {tipo: 'Bicicleta en intervalos', lista: [
+      {n: 'Calentamiento', d: '5 min', how: 'Pedalea suave, sube la resistencia poco a poco.'},
+      {n: 'Intervalos', d: Math.max(5, Math.floor((bMin - 10) / 2)) + ' × (1 min fuerte + 1 min suave)', how: 'En el minuto fuerte, resistencia alta: solo puedes decir palabras sueltas. Recupera pedaleando suave.'},
+      {n: 'Vuelta a la calma', d: '5 min', how: 'Resistencia mínima y ritmo lento.'}]}
+  }[lvl];
+  const BICI_TIP = 'Ajusta el sillín para que, con el pedal abajo, la rodilla quede casi estirada. Si puedes, hazlo entre 30 y 60 minutos después de comer: así baja el pico de glucosa de esa comida.';
   let fi = 0, fi2 = 0;
   const exList = (list, dose) => list.map(e => `<div class="ex"><span>${e.n}</span><span class="dose">${e.dose ? e.dose[lvl-1] : dose}</span><span class="how">${e.how}</span></div>`).join('');
   exDias = plan.map(t => t === 'F' ? {tipo:'Fuerza', min, lista: ((fi2++ % 2) ? B : A).map(e => e.n)}
     : t === 'C' ? {tipo:'Cardio en intervalos', min, lista: cardio.slice(0,4).map(e => e.n)}
+    : t === 'B' ? {tipo: BICI.tipo, min: bMin, lista: BICI.lista.map(x => `${x.n} ${x.d}`)}
     : t === 'P' ? {tipo:'Paseo a paso ligero', min: Math.max(min,30), lista: ['Puedes repartirlo en paseos de 10–15 minutos después de cada comida']}
     : {tipo:'Descanso activo', min: 10, lista: ['Paseo tranquilo y estiramientos suaves']});
   $('#week').innerHTML = plan.map((t, d) => {
@@ -918,8 +941,10 @@ function renderExercise(){
       body = `<span class="tag">Fuerza · ${min} min</span><p class="note">${MOV}</p>${exList(set, fDose)}<p class="note">Descansa 45–60 s entre series. ${STRETCH}</p>`; }
     else if (t==='C'){
       body = `<span class="tag cardio">Cardio en intervalos · ${min} min</span><p class="note">${MOV} Después, repite el circuito; ${cRest} entre ejercicios.</p>${exList(cardio.slice(0,4), cDose)}<p class="note">Debes poder hablar con frases cortas. ${STRETCH}</p>`; }
+    else if (t==='B'){
+      body = `<span class="tag cardio">${BICI.tipo} · ${bMin} min</span>${BICI.lista.map(x => `<div class="ex"><span>${x.n}</span><span class="dose">${x.d}</span><span class="how">${x.how}</span></div>`).join('')}<p class="note">${BICI_TIP} ${STRETCH}</p>`; }
     else if (t==='P'){
-      body = `<span class="tag cardio">Paseo a paso ligero · ${Math.max(min,30)} min</span><p class="note">Puedes repartirlo en paseos de 10–15 minutos después de cada comida. Si llueve, marcha en el sitio o sube escaleras en casa.</p>`; }
+      body = `<span class="tag cardio">Paseo a paso ligero · ${Math.max(min,30)} min</span><p class="note">Puedes repartirlo en paseos de 10–15 minutos después de cada comida. Si llueve, ${bici ? 'cámbialo por 20–30 minutos de bicicleta suave' : 'marcha en el sitio o sube escaleras en casa'}.</p>`; }
     else {
       body = `<span class="tag rest">Descanso activo</span><p class="note">Paseo tranquilo y 10 minutos de estiramientos suaves. Revisa tus pies hoy: rozaduras, ampollas o heridas.</p>`; }
     return `<article class="session"><h3>${DIAS[d]}</h3>${body}</article>`;
